@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: al-uyun-parishad-server
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://al-uyun-parishad-2026.web.app
+      - key: MONGODB_URI
+        value: mongodb://alordisha_xyz:alordisha_xyz@ac-p7zq2ke-shard-00-00.wfnasx3.mongodb.net:27017,ac-p7zq2ke-shard-00-01.wfnasx3.mongodb.net:27017,ac-p7zq2ke-shard-00-02.wfnasx3.mongodb.net:27017/al_uyun_parishad_2026?ssl=true&replicaSet=atlas-xsl2s8-shard-0&authSource=admin&appName=Cluster0
+      - key: ADMIN_EMAILS
+        value: alordishafoundation42@gmail.com,admin@aluyun.org,mamun@aluyun.org
