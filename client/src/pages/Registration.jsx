@@ -14,7 +14,8 @@ import {
   AlertCircle, 
   CheckCircle,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from 'lucide-react';
 
 export default function Registration() {
@@ -596,23 +597,57 @@ export default function Registration() {
               <h2 className="text-xl font-bold">ঘ. শুভেচ্ছা ফি জমাদানের তথ্য</h2>
             </div>
 
-            {/* Payment Contact Notification */}
-            <div className="p-5 bg-amber-50 rounded-2xl border border-gold-200 space-y-2">
-              <span className="text-xs font-bold text-gold-800 uppercase tracking-wider">
-                পেমেন্ট রিসিভার ও বিকাশ নম্বর
-              </span>
-              <div className="text-lg font-bold text-slate-900">কাজী একেএম সাইফুদ্দিন মামুন</div>
-              <div className="text-xl font-extrabold text-emerald-800 font-mono">+880 1819-173608</div>
-              <p className="text-xs text-slate-600">
-                বিকাশ পার্সোনাল নম্বরে অথবা ব্যাংক অ্যাকাউন্টে মোট <strong>{toBangla(totalPayableFee)} টাকা</strong> পাঠিয়ে ট্রানজ্যাকশন আইডি ও প্রেরক নম্বর নিচে পূরণ করুন।
-              </p>
+            {/* Payment Options Banner */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Option 1: bKash */}
+              <div className={`p-5 rounded-2xl border transition-all ${
+                formData.paymentMethod === 'বিকাশ' 
+                  ? 'bg-pink-50/70 border-pink-300 ring-2 ring-pink-600/20' 
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center justify-between pb-2 border-b border-pink-200/50">
+                  <span className="text-xs font-bold text-pink-800 uppercase tracking-wider">পদ্ধতি ১ : বিকাশ (পার্সোনাল)</span>
+                  <span className="badge badge-sm bg-pink-700 text-white border-none">Send Money</span>
+                </div>
+                <div className="pt-2 space-y-1">
+                  <div className="text-xs text-slate-500">প্রাপক: কাজী একেএম সাইফুদ্দিন মামুন</div>
+                  <div className="text-xl font-extrabold text-pink-800 font-mono tracking-wider">+880 1819-173608</div>
+                  <p className="text-xs text-slate-600 pt-1">
+                    মোট <strong>{toBangla(totalPayableFee)} টাকা</strong> বিকাশ করে প্রাপ্ত TrxID দিন।
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 2: Bank Deposit */}
+              <div className={`p-5 rounded-2xl border transition-all ${
+                formData.paymentMethod === 'ব্যাংক' 
+                  ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-600/20' 
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/50">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center">
+                    <Building2 className="w-3.5 h-3.5 mr-1 text-emerald-700" />
+                    পদ্ধতি ২ : ব্যাংক একাউন্ট
+                  </span>
+                  <span className="badge badge-sm bg-emerald-800 text-white border-none">AIBL</span>
+                </div>
+                <div className="pt-2 space-y-1 text-xs text-slate-700">
+                  <div><strong>ব্যাংক:</strong> আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড</div>
+                  <div><strong>শাখা:</strong> মুরাদপুর শাখা, চট্টগ্রাম</div>
+                  <div><strong>হিসাবের নাম:</strong> <span className="font-mono font-bold">ALYOUN PORISHAD</span></div>
+                  <div><strong>হিসাব নং:</strong> <span className="font-mono font-extrabold text-emerald-900 text-sm">1091120017273</span></div>
+                  <p className="text-xs text-slate-600 pt-0.5">
+                    ব্যাংক ডিপোজিট বা ট্রান্সফার করে স্লিপ নং/রেফারেন্স দিন।
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
-              {/* Payment Method */}
+              {/* Payment Method Selector */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">পেমেন্ট মাধ্যম *</label>
+                <label className="text-sm font-semibold text-slate-800">পেমেন্ট মাধ্যম সিলেক্ট করুন *</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -634,7 +669,7 @@ export default function Registration() {
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    ব্যাংক ডিপোজিট
+                    ব্যাংক একাউন্ট
                   </button>
                 </div>
               </div>

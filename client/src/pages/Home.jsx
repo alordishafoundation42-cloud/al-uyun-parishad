@@ -20,7 +20,7 @@ import CountdownTimer from '../components/CountdownTimer';
 export default function Home() {
   const schedulePreview = [
     { time: 'সকাল ১০:০০টা', title: 'হোটেলে উপস্থিতি ও জমায়েত' },
-    { time: 'সকাল ১০:৩০–দুপুর ১:০০', title: 'নাশতা, স্মৃতিচারণ ও কুইজ প্রতিযোগিতা' },
+    { time: 'সকাল ১০:৩০–দুপুর ১:০০', title: 'নাস্তা, স্মৃতিচারণ ও কুইজ প্রতিযোগিতা' },
     { time: 'দুপুর ১:০০টা', title: 'জোহরের নামাজ ও দুপুরের খাবার' },
     { time: 'দুপুর ২:৩০–বিকেল ৫:৩০', title: 'সিআরবি ও পতেঙ্গা সমুদ্রসৈকত ভ্রমণ' },
     { time: 'বিকেল ৫:৪৫–সন্ধ্যা ৬:১৫', title: 'বার্ষিক সাধারণ সভা ও পুরস্কার বিতরণ' },
@@ -271,12 +271,20 @@ export default function Home() {
               কাজী একেএম সাইফুদ্দিন মামুন
             </h2>
             <p className="text-slate-600 text-sm leading-relaxed">
-              শুভেচ্ছা ফি বিকাশ অথবা ব্যাংক অ্যাকাউন্টের মাধ্যমে জমা দেওয়া যাবে। পেমেন্টের বিস্তারিত তথ্য ও রেজিস্ট্রেশন নিশ্চিত করতে যোগাযোগ করুন।
+              শুভেচ্ছা ফি বিকাশ পার্সোনাল অথবা আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড (মুরাদপুর শাখা)-এ জমা দেওয়া যাবে।
             </p>
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
-              <div className="text-xs text-emerald-800 font-semibold uppercase">বিকাশ ও সরাসরি মোবাইল নম্বর</div>
-              <div className="text-2xl font-extrabold text-emerald-950 font-mono tracking-wider">
-                +880 1819-173608
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="p-4 bg-pink-50/70 rounded-2xl border border-pink-200 space-y-1">
+                <div className="text-xs text-pink-800 font-semibold uppercase">বিকাশ (পার্সোনাল)</div>
+                <div className="text-lg font-extrabold text-pink-900 font-mono">
+                  +880 1819-173608
+                </div>
+              </div>
+              <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-1">
+                <div className="text-xs text-emerald-800 font-semibold uppercase">ব্যাংক একাউন্ট (AIBL)</div>
+                <div className="text-lg font-extrabold text-emerald-950 font-mono">
+                  1091120017273
+                </div>
               </div>
             </div>
           </div>

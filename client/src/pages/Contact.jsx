@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, MapPin, Calendar, Clock, CreditCard, HelpCircle, MessageSquare } from 'lucide-react';
+import { Phone, MapPin, Calendar, Clock, CreditCard, HelpCircle, MessageSquare, Building2 } from 'lucide-react';
 
 export default function Contact() {
   const faqs = [
@@ -9,7 +9,7 @@ export default function Contact() {
     },
     {
       q: 'বিকাশ ছাড়া কি ব্যাংক অ্যাকাউন্টে ফি দেওয়া যাবে?',
-      a: 'হ্যাঁ, ব্যাংক একাউন্টের মাধ্যমে ফি জমা দিতে চাইলে অনুগ্রহ করে সরাসরি জনাব কাজী একেএম সাইফুদ্দিন মামুনের মোবাইল নম্বরে (+880 1819-173608) যোগাযোগ করে ব্যাংক বিবরণী জেনে নিন।'
+      a: 'হ্যাঁ, আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড (মুরাদপুর শাখা)-এ ALYOUN PORISHAD হিসাব নম্বরে (১০৯১১২০০১৭২৭৩) সরাসরি ফি জমা দেওয়া যাবে।'
     },
     {
       q: 'রেজিস্ট্রেশনের পর পেমেন্ট কনফার্মেশন কীভাবে পাব?',
@@ -50,30 +50,45 @@ export default function Contact() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">পেমেন্ট ও সমন্বয়ক</h2>
-                  <p className="text-xs text-slate-500">শুভেচ্ছা ফি জমাদান ও অনুসন্ধান</p>
+                  <p className="text-xs text-slate-500">বিকাশ ও ব্যাংক একাউন্টে শুভেচ্ছা ফি জমাদান</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-1">
-                  <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">দায়িত্বপ্রাপ্ত সমন্বয়কারী</span>
-                  <div className="text-xl font-bold text-slate-900">কাজী একেএম সাইফুদ্দিন মামুন</div>
-                </div>
-
-                <div className="p-5 bg-amber-50/70 rounded-2xl border border-gold-200 space-y-1.5">
-                  <span className="text-xs font-semibold text-gold-800 uppercase tracking-wider">বিকাশ ও সরাসরি মোবাইল নম্বর</span>
-                  <div className="text-2xl font-extrabold font-mono text-emerald-950">
+                {/* Coordinator & bKash */}
+                <div className="p-5 bg-pink-50/70 rounded-2xl border border-pink-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-pink-800 uppercase tracking-wider">বিকাশ (পার্সোনাল) ও সমন্বয়ক</span>
+                    <span className="badge badge-sm bg-pink-700 text-white border-none">Send Money</span>
+                  </div>
+                  <div className="text-lg font-bold text-slate-900">কাজী একেএম সাইফুদ্দিন মামুন</div>
+                  <div className="text-2xl font-extrabold font-mono text-pink-700">
                     +880 1819-173608
                   </div>
-                  <p className="text-xs text-slate-600">
-                    * বিকাশ পার্সোনাল অথবা ব্যাংক ডিপোজিটের বিশদ তথ্যের জন্য উপরোক্ত নম্বরে ফোন করুন।
-                  </p>
+                </div>
+
+                {/* Bank Account Details */}
+                <div className="p-5 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider flex items-center">
+                      <Building2 className="w-4 h-4 mr-1 text-emerald-700" />
+                      ব্যাংক একাউন্ট বিবরণী
+                    </span>
+                    <span className="badge badge-sm bg-emerald-800 text-white border-none">AIBL</span>
+                  </div>
+                  <div className="space-y-1 text-xs sm:text-sm text-slate-700">
+                    <div><strong>ব্যাংক:</strong> আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড</div>
+                    <div><strong>শাখা:</strong> মুরাদপুর শাখা, চট্টগ্রাম</div>
+                    <div><strong>হিসাবের নাম:</strong> <span className="font-mono font-bold">ALYOUN PORISHAD</span></div>
+                    <div><strong>হিসাবের ধরন:</strong> মুদারাবা সঞ্চয়ী হিসাব (MSD)</div>
+                    <div><strong>হিসাব নম্বর:</strong> <span className="font-mono font-extrabold text-emerald-950 text-base">1091120017273</span></div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="pt-2 text-xs text-slate-500">
-              নিরাপত্তা বিধির কারণে সর্বসাধারণের জন্য ওয়েবসাইটে ব্যাংক অ্যাকাউন্ট উন্মুক্ত করা হয়নি। ব্যাংক লেনদেনের জন্য সরাসরি সমন্বয়কের সাথে কথা বলুন।
+              * বিকাশ বা ব্যাংকে ফি পাঠিয়ে প্রাপ্ত ট্রানজ্যাকশন আইডি (TrxID) বা ব্যাংক ডিপোজিট রেফারেন্স নম্বর দিয়ে অনলাইন রেজিস্ট্রেশন সম্পন্ন করুন।
             </div>
           </div>
 

@@ -11,7 +11,8 @@ import {
   CheckCircle, 
   ArrowRight,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 
 export default function EventDetails() {
@@ -23,7 +24,7 @@ export default function EventDetails() {
     },
     {
       time: 'সকাল ১০:৩০টা – দুপুর ১:০০টা',
-      title: 'নাশতা, পরিচয় পর্ব, স্মৃতিচারণ, অভিব্যক্তি প্রকাশ ও কুইজ প্রতিযোগিতা',
+      title: 'নাস্তা, পরিচয় পর্ব, স্মৃতিচারণ, অভিব্যক্তি প্রকাশ ও কুইজ প্রতিযোগিতা',
       description: 'উপস্থিত সকলের পরিচয় পর্ব, অতীতের স্মৃতি রোমন্থন, মুক্ত আলোচনা এবং শিশুদের বিশেষ ডিজিটাল কুইজ প্রতিযোগিতা।'
     },
     {
@@ -247,19 +248,68 @@ export default function EventDetails() {
           <div className="border-b border-emerald-100 pb-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-emerald-950 flex items-center">
               <Phone className="w-7 h-7 mr-3 text-gold-600" />
-              পেমেন্ট ও যোগাযোগ
+              পেমেন্ট মাধ্যম ও শুভেচ্ছা ফি জমাদান
             </h2>
+            <p className="text-slate-600 text-sm mt-1">
+              অংশগ্রহণকারী বন্ধুরা বিকাশ পার্সোনাল অথবা সরাসরি ব্যাংকে শুভেচ্ছা ফি জমা দিতে পারবেন।
+            </p>
           </div>
 
-          <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-            <h3 className="text-xl font-bold text-slate-900">জনাব কাজী একেএম সাইফুদ্দিন মামুন</h3>
-            <p className="text-sm text-slate-600">মোবাইল ও বিকাশ নম্বর:</p>
-            <div className="text-2xl font-bold font-mono text-emerald-800">
-              +880 1819-173608
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* bKash Payment Box */}
+            <div className="p-6 bg-gradient-to-br from-pink-50/60 to-rose-50/40 rounded-2xl border border-pink-200 space-y-3">
+              <div className="flex items-center justify-between border-b border-pink-200/80 pb-2">
+                <span className="text-xs font-bold text-pink-800 uppercase tracking-wider">মাধ্যম ১ : বিকাশ (bKash)</span>
+                <span className="badge badge-sm bg-pink-700 text-white border-none">পার্সোনাল</span>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-slate-500">প্রাপক ও সমন্বয়ক:</div>
+                <div className="text-lg font-bold text-slate-900">কাজী একেএম সাইফুদ্দিন মামুন</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-slate-500">বিকাশ মোবাইল নম্বর:</div>
+                <div className="text-2xl font-extrabold font-mono text-pink-700 tracking-wider">
+                  +880 1819-173608
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 pt-1 leading-relaxed">
+                * বিকাশ অ্যাপ বা ডায়াল করে Send Money করার পর ট্রানজ্যাকশন আইডি (TrxID) সংরক্ষণ করুন।
+              </p>
             </div>
-            <p className="text-slate-600 text-sm leading-relaxed pt-2">
-              শুভেচ্ছা ফি বিকাশ অথবা ব্যাংক অ্যাকাউন্টের মাধ্যমে জমা দেওয়া যাবে। পেমেন্টের বিস্তারিত তথ্য ও রেজিস্ট্রেশন নিশ্চিত করতে উল্লিখিত নম্বরে যোগাযোগ করার জন্য সকল বন্ধুকে বিশেষভাবে অনুরোধ করা যাচ্ছে।
-            </p>
+
+            {/* Bank Deposit Box */}
+            <div className="p-6 bg-gradient-to-br from-emerald-50/60 to-teal-50/40 rounded-2xl border border-emerald-200 space-y-3">
+              <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center">
+                  <Building2 className="w-4 h-4 mr-1 text-emerald-700" />
+                  মাধ্যম ২ : ব্যাংক একাউন্ট (Bank Deposit)
+                </span>
+                <span className="badge badge-sm bg-emerald-800 text-white border-none">ইসলামী ব্যাংক</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-xs text-slate-500">ব্যাংকের নাম:</span>
+                  <div className="font-bold text-slate-900">আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড</div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500">শাখা:</span>
+                  <div className="font-bold text-slate-900">মুরাদপুর শাখা, চট্টগ্রাম</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-xs text-slate-500">হিসাবের নাম (Account Name):</span>
+                  <div className="font-bold text-slate-900 font-mono tracking-wide">ALYOUN PORISHAD</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-xs text-slate-500">হিসাব নম্বর (Mudaraba Savings A/C No):</span>
+                  <div className="text-xl sm:text-2xl font-extrabold font-mono text-emerald-900 tracking-wider">
+                    1091120017273
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 pt-1 leading-relaxed">
+                * ব্যাংকে সরাসরি জমা বা অনলাইন ট্রান্সফার করে ডিপোজিট স্লিপ নম্বর বা রেফারেন্স সংরক্ষণ করুন।
+              </p>
+            </div>
           </div>
         </div>
 
