@@ -115,7 +115,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-extrabold text-blue-900 font-mono">
             {toBangla(stats.totalParticipants)} জন
           </div>
-          <p className="text-xs text-slate-400">বন্ধু + স্ত্রী/স্বামী + সন্তান ও আত্মীয়বর্গ</p>
+          <p className="text-xs text-slate-400">বন্ধু + স্ত্রী + সন্তান ও আত্মীয়বর্গ</p>
         </div>
 
         {/* Card 3: Total Expected Fees */}

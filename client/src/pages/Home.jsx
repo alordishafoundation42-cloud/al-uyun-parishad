@@ -212,7 +212,7 @@ export default function Home() {
               প্রতি অংশগ্রহণকারীর শুভেচ্ছা ফি ১,০০০ টাকা
             </h2>
             <p className="text-slate-700 leading-relaxed text-sm sm:text-base">
-              বন্ধু, স্বামী/স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্যই ১,০০০ টাকা করে ফি প্রযোজ্য হবে</strong>।
+              বন্ধু, স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্যই ১,০০০ টাকা করে ফি প্রযোজ্য হবে</strong>।
             </p>
             <div className="p-4 bg-white/80 rounded-xl border border-emerald-200 text-sm text-slate-800 space-y-1">
               <p><strong>উদাহরণ:</strong> ১ জন মূল বন্ধু + স্ত্রী + ২ সন্তান = মোট ৪ জন অংশগ্রহণকারী = ৪,০০০ টাকা।</p>

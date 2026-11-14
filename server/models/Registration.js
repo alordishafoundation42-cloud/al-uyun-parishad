@@ -4,7 +4,7 @@ const familyMemberSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   age: { type: Number, required: true, min: 1, max: 120 },
   gender: { type: String, enum: ['পুরুষ', 'মহিলা', 'অন্যান্য'], required: true },
-  relationship: { type: String, enum: ['স্ত্রী/স্বামী', 'ছেলে', 'মেয়ে', 'অন্যান্য'], required: true }
+  relationship: { type: String, enum: ['স্ত্রী', 'স্ত্রী/স্বামী', 'ছেলে', 'মেয়ে', 'অন্যান্য'], required: true }
 }, { _id: true });
 
 const registrationSchema = new mongoose.Schema({

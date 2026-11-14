@@ -59,7 +59,7 @@ export default function RegistrationsManager() {
           presentAddress: 'জিইসি মোড়, চট্টগ্রাম',
           permanentAddress: 'পটিয়া, চট্টগ্রাম',
           familyMembers: [
-            { name: 'ফাতিমা বেগম', age: 32, gender: 'মহিলা', relationship: 'স্ত্রী/স্বামী' },
+            { name: 'ফাতিমা বেগম', age: 32, gender: 'মহিলা', relationship: 'স্ত্রী' },
             { name: 'আব্দুর রহমান', age: 9, gender: 'পুরুষ', relationship: 'ছেলে' },
             { name: 'মরিয়ম আক্তার', age: 6, gender: 'মহিলা', relationship: 'মেয়ে' }
           ],

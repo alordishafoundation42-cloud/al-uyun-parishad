@@ -68,8 +68,8 @@ export default function Registration() {
         id: Date.now(),
         name: '',
         age: '',
-        gender: 'পুরুষ',
-        relationship: 'স্ত্রী/স্বামী',
+        gender: 'মহিলা',
+        relationship: 'স্ত্রী',
       }
     ]);
   };
@@ -502,7 +502,7 @@ export default function Registration() {
                           onChange={(e) => updateFamilyMember(member.id, 'relationship', e.target.value)}
                           className="select select-bordered select-sm w-full bg-white"
                         >
-                          <option value="স্ত্রী/স্বামী">স্ত্রী/স্বামী</option>
+                          <option value="স্ত্রী">স্ত্রী</option>
                           <option value="ছেলে">ছেলে</option>
                           <option value="মেয়ে">মেয়ে</option>
                           <option value="অন্যান্য">অন্যান্য</option>
