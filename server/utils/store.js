@@ -62,7 +62,7 @@ class DataStore {
     ];
     this.settings = {
       key: 'global_settings',
-      eventName: 'আল উয়ূন পরিষদ — বার্ষিক পারিবারিক মিলনমেলা–২০২৬',
+      eventName: 'আল উয়ূন পরিষদ — বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)',
       eventDate: '১২ ডিসেম্বর ২০২৬, শনিবার',
       eventVenue: 'হোটেল সৈকত, সাঙ্গু হল, স্টেশন রোড, চট্টগ্রাম',
       perPersonFee: 1000,

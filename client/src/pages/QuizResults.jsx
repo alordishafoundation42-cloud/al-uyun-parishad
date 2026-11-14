@@ -46,7 +46,7 @@ export default function QuizResults() {
             কুইজ প্রতিযোগিতার মেধা তালিকা ও ফলাফল
           </h1>
           <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto">
-            আল উয়ূন পরিষদ বার্ষিক পারিবারিক মিলনমেলা–২০২৬ এর শিশু কুইজ ফলাফল
+            আল উয়ূন পরিষদ বার্ষিক মিলনমেলা–২০২৬ (সপরিবার) এর শিশু কুইজ ফলাফল
           </p>
         </div>
 

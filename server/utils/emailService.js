@@ -50,7 +50,7 @@ const sendPaymentConfirmationEmail = async ({ toEmail, friendName, registrationN
         <div class="header">
           <div style="font-size: 14px; margin-bottom: 6px;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
           <h2 style="margin: 0; font-size: 22px;">আল উয়ূন পরিষদ</h2>
-          <div style="font-size: 13px; color: #fde047;">বার্ষিক পারিবারিক মিলনমেলা–২০২৬</div>
+          <div style="font-size: 13px; color: #fde047;">বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)</div>
         </div>
         <div class="content">
           <h3 style="color: #065f46; margin-top: 0;">রেজিস্ট্রেশন ও পেমেন্ট নিশ্চিতকরণ</h3>

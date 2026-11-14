@@ -46,7 +46,7 @@ export default function Home() {
               আল উয়ূন পরিষদ
             </h1>
             <div className="text-xl sm:text-3xl font-semibold text-gold-400">
-              বার্ষিক পারিবারিক মিলনমেলা–২০২৬
+              বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)
             </div>
           </div>
 

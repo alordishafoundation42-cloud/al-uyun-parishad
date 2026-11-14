@@ -45,7 +45,7 @@ export default function RegistrationSuccess() {
               রেজিস্ট্রেশন সফলভাবে জমা হয়েছে!
             </h1>
             <p className="text-slate-600 text-sm max-w-md mx-auto">
-              ধন্যবাদ <strong>{friendName}</strong>। আপনার পারিবারিক মিলনমেলার তথ্য ও পেমেন্ট বিবরণী সংরক্ষিত হয়েছে।
+              ধন্যবাদ <strong>{friendName}</strong>। মিলনমেলা–২০২৬ (সপরিবার)-এর জন্য আপনার রেজিস্ট্রেশন তথ্য ও পেমেন্ট বিবরণী সংরক্ষিত হয়েছে।
             </p>
           </div>
 

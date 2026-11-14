@@ -35,7 +35,7 @@ export default function Navbar() {
                 আল উয়ূন পরিষদ
               </div>
               <div className="text-xs sm:text-sm font-medium text-gold-700">
-                বার্ষিক পারিবারিক মিলনমেলা–২০২৬
+                বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)
               </div>
             </div>
           </Link>

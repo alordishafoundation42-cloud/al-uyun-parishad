@@ -15,7 +15,7 @@ export default function Privacy() {
             গোপনীয়তা নীতিমালা (Privacy Policy)
           </h1>
           <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto">
-            আল উয়ূন পরিষদ — বার্ষিক পারিবারিক মিলনমেলা–২০২৬ এর তথ্য সুরক্ষা ও গোপনীয়তা সংক্রান্ত অঙ্গীকার
+            আল উয়ূন পরিষদ — বার্ষিক মিলনমেলা–২০২৬ (সপরিবার) এর তথ্য সুরক্ষা ও গোপনীয়তা সংক্রান্ত অঙ্গীকার
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export default function Privacy() {
         <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-emerald-100 space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
           
           <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900 font-medium">
-            আসসালামু আলাইকুম। আল উয়ূন পরিষদের পারিবারিক মিলনমেলার এই প্ল্যাটফর্মে আপনার এবং আপনার পরিবারের সকল সম্মানিত সদস্যদের ব্যক্তিগত তথ্যের সর্বোচ্চ নিরাপত্তা ও পবিত্রতা বজায় রাখা আমাদের নৈতিক ও ইসলামিক দায়িত্ব।
+            আসসালামু আলাইকুম। আল উয়ূন পরিষদের বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)-এর এই প্ল্যাটফর্মে আপনার এবং আপনার পরিবারের সকল সম্মানিত সদস্যদের ব্যক্তিগত তথ্যের সর্বোচ্চ নিরাপত্তা ও পবিত্রতা বজায় রাখা আমাদের নৈতিক ও ইসলামিক দায়িত্ব।
           </div>
 
           {/* Section 1 */}
@@ -81,7 +81,7 @@ export default function Privacy() {
           </div>
 
           <div className="pt-4 border-t border-slate-200 text-xs text-slate-500 text-center">
-            সর্বশেষ হালনাগাদ: নভেম্বর ২০২৬ • আল উয়ূন পরিষদ — বার্ষিক পারিবারিক মিলনমেলা–২০২৬
+            সর্বশেষ হালনাগাদ: নভেম্বর ২০২৬ • আল উয়ূন পরিষদ — বার্ষিক মিলনমেলা–২০২৬ (সপরিবার)
           </div>
 
         </div>

@@ -35,7 +35,7 @@ export default {
         }
       },
       fontFamily: {
-        bengali: ['"Hind Siliguri"', 'system-ui', 'sans-serif'],
+        bengali: ['"Noto Sans Bengali"', '"Anek Bangla"', '"SolaimanLipi"', '"Kalpurush"', 'system-ui', 'sans-serif'],
       }
     },
   },
