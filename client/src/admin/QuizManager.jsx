@@ -44,6 +44,13 @@ export default function QuizManager() {
     isActive: true
   });
 
+  // Preview modal state
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewQuestion, setPreviewQuestion] = useState(null);
+  const [previewMode, setPreviewMode] = useState('single'); // 'single' | 'full'
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState('');
+
   // Bengali number converter
   const toBangla = (num) => {
     const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -176,6 +183,45 @@ export default function QuizManager() {
       loadData();
     } catch (err) {
       alert(err.message || 'মুছে ফেলতে ব্যর্থ হয়েছে।');
+    }
+  };
+
+  // Open single question preview
+  const openSinglePreview = (q) => {
+    setPreviewQuestion(q);
+    setPreviewMode('single');
+    setSelectedAnswer('');
+    setShowPreviewModal(true);
+  };
+
+  // Open full quiz preview (all active questions)
+  const openFullPreview = () => {
+    const active = questions.filter(q => q.isActive !== false);
+    if (active.length === 0) { alert('কোনো সক্রিয় প্রশ্ন নেই।'); return; }
+    setPreviewMode('full');
+    setPreviewIndex(0);
+    setPreviewQuestion(active[0]);
+    setSelectedAnswer('');
+    setShowPreviewModal(true);
+  };
+
+  const goNextPreview = () => {
+    const active = questions.filter(q => q.isActive !== false);
+    const next = previewIndex + 1;
+    if (next < active.length) {
+      setPreviewIndex(next);
+      setPreviewQuestion(active[next]);
+      setSelectedAnswer('');
+    }
+  };
+
+  const goPrevPreview = () => {
+    const active = questions.filter(q => q.isActive !== false);
+    const prev = previewIndex - 1;
+    if (prev >= 0) {
+      setPreviewIndex(prev);
+      setPreviewQuestion(active[prev]);
+      setSelectedAnswer('');
     }
   };
 
@@ -320,28 +366,37 @@ export default function QuizManager() {
       {/* TAB 2: QUESTIONS MANAGEMENT */}
       {activeTab === 'questions' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <span className="text-xs text-slate-500">
               * নোট: বাবার নিবন্ধিত তথ্যভিত্তিক প্রশ্নগুলো পিতার আসল প্রোফাইল থেকে স্বয়ংক্রিয়ভাবে সার্ভার জেনারেট করে।
             </span>
-            <button
-              onClick={() => {
-                setEditingQuestion(null);
-                setQuestionForm({
-                  question: '',
-                  category: 'সাধারণ জ্ঞান',
-                  options: ['', '', '', ''],
-                  correctAnswer: '',
-                  marks: 1,
-                  difficulty: 'সহজ',
-                  isActive: true
-                });
-                setShowQuestionModal(true);
-              }}
-              className="btn btn-sm bg-emerald-800 hover:bg-emerald-900 text-white"
-            >
-              <Plus className="w-4 h-4 mr-1" /> নতুন প্রশ্ন যুক্ত করুন
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={openFullPreview}
+                className="btn btn-sm btn-outline border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white"
+                title="সকল সক্রিয় প্রশ্নের লাইভ কুইজ প্রিভিউ"
+              >
+                <Eye className="w-4 h-4 mr-1" /> সম্পূর্ণ কুইজ প্রিভিউ
+              </button>
+              <button
+                onClick={() => {
+                  setEditingQuestion(null);
+                  setQuestionForm({
+                    question: '',
+                    category: 'সাধারণ জ্ঞান',
+                    options: ['', '', '', ''],
+                    correctAnswer: '',
+                    marks: 1,
+                    difficulty: 'সহজ',
+                    isActive: true
+                  });
+                  setShowQuestionModal(true);
+                }}
+                className="btn btn-sm bg-emerald-800 hover:bg-emerald-900 text-white"
+              >
+                <Plus className="w-4 h-4 mr-1" /> নতুন প্রশ্ন যুক্ত করুন
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -349,20 +404,29 @@ export default function QuizManager() {
               <div key={q._id || idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 text-xs">
                 <div className="flex justify-between items-start">
                   <span className="badge badge-outline text-[11px] font-semibold">{q.category}</span>
-                  <div className="space-x-1">
+                  <div className="space-x-1 flex items-center">
+                    <button
+                      onClick={() => openSinglePreview(q)}
+                      className="p-1 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded"
+                      title="প্রশ্নের প্রিভিউ দেখুন"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={() => {
                         setEditingQuestion(q);
                         setQuestionForm(q);
                         setShowQuestionModal(true);
                       }}
-                      className="p-1 text-slate-600 hover:text-emerald-800"
+                      className="p-1 text-slate-600 hover:text-emerald-800 hover:bg-slate-100 rounded"
+                      title="সম্পাদনা করুন"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteQuestion(q._id)}
-                      className="p-1 text-red-500 hover:text-red-700"
+                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                      title="মুছে ফেলুন"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -518,6 +582,142 @@ export default function QuizManager() {
                 <button type="submit" className="btn btn-xs btn-primary bg-emerald-800 text-white font-bold">সংরক্ষণ করুন</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Question / Quiz Live Preview Modal */}
+      {showPreviewModal && previewQuestion && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="badge badge-accent bg-emerald-100 text-emerald-800 border-emerald-200 text-xs font-bold">
+                  {previewMode === 'full' ? `কুইজ প্রিভিউ (${toBangla(previewIndex + 1)}/${toBangla(questions.filter(q => q.isActive !== false).length)})` : 'প্রশ্নের প্রিভিউ'}
+                </span>
+                <span className="badge badge-outline text-[11px] font-semibold">{previewQuestion.category || 'সাধারণ জ্ঞান'}</span>
+              </div>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="btn btn-circle btn-ghost btn-xs text-slate-400 hover:text-slate-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Child-friendly quiz view simulator */}
+            <div className="bg-gradient-to-br from-emerald-900 to-teal-950 p-6 rounded-2xl text-white shadow-inner space-y-5">
+              <div className="flex justify-between items-center text-xs text-emerald-200/80 border-b border-emerald-800/60 pb-3">
+                <div className="flex items-center space-x-1.5">
+                  <Clock className="w-3.5 h-3.5 text-gold-400" />
+                  <span>সময় বাকি: <span className="font-mono font-bold text-white">১৮:৪৫ মিনিট</span></span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <Award className="w-3.5 h-3.5 text-gold-400" />
+                  <span>মান: <span className="font-mono font-bold text-white">{toBangla(previewQuestion.marks || 1)}</span></span>
+                </div>
+              </div>
+
+              {/* Question Text */}
+              <div className="py-2">
+                <span className="text-xs text-emerald-300 font-semibold block mb-1">
+                  প্রশ্ন {previewMode === 'full' ? toBangla(previewIndex + 1) : '১'}:
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                  {previewQuestion.question}
+                </h3>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-2.5 pt-1">
+                {previewQuestion.options?.map((opt, idx) => {
+                  const isCorrect = opt === previewQuestion.correctAnswer;
+                  const isSelected = selectedAnswer === opt;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedAnswer(opt)}
+                      className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between text-xs sm:text-sm ${
+                        isSelected
+                          ? 'bg-gold-500 text-emerald-950 border-gold-400 font-bold shadow-md'
+                          : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
+                          isSelected ? 'bg-emerald-950 text-gold-400 border-gold-400' : 'bg-white/10 text-emerald-200 border-white/20'
+                        }`}>
+                          {toBangla(idx + 1)}
+                        </span>
+                        <span>{opt}</span>
+                      </div>
+                      {isCorrect && (
+                        <span className="text-[10px] bg-emerald-600/90 text-white px-2 py-0.5 rounded font-mono">
+                          সঠিক উত্তর
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Answer verification alert for admin */}
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
+              <div>
+                <span className="font-semibold text-slate-600">ডাটাবেজ সঠিক উত্তর: </span>
+                <span className="font-bold text-emerald-800">{previewQuestion.correctAnswer}</span>
+              </div>
+              {selectedAnswer && (
+                <div>
+                  {selectedAnswer === previewQuestion.correctAnswer ? (
+                    <span className="text-emerald-700 font-bold flex items-center">
+                      <CheckCircle className="w-3.5 h-3.5 mr-1" /> সঠিক নির্বাচিত হয়েছে!
+                    </span>
+                  ) : (
+                    <span className="text-red-600 font-bold flex items-center">
+                      <XCircle className="w-3.5 h-3.5 mr-1" /> ভুল অপশন নির্বাচিত
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+              {previewMode === 'full' ? (
+                <>
+                  <button
+                    onClick={goPrevPreview}
+                    disabled={previewIndex === 0}
+                    className="btn btn-xs btn-outline border-slate-300 text-slate-700 disabled:opacity-40"
+                  >
+                    ← পূর্ববর্তী
+                  </button>
+                  <span className="text-xs text-slate-500 font-mono">
+                    {toBangla(previewIndex + 1)} / {toBangla(questions.filter(q => q.isActive !== false).length)}
+                  </span>
+                  <button
+                    onClick={goNextPreview}
+                    disabled={previewIndex >= questions.filter(q => q.isActive !== false).length - 1}
+                    className="btn btn-xs bg-emerald-800 hover:bg-emerald-900 text-white disabled:opacity-40"
+                  >
+                    পরবর্তী →
+                  </button>
+                </>
+              ) : (
+                <div className="w-full flex justify-end">
+                  <button
+                    onClick={() => setShowPreviewModal(false)}
+                    className="btn btn-xs bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4"
+                  >
+                    বন্ধ করুন
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import { 
   User, 
   Phone, 
@@ -20,6 +21,43 @@ import {
 
 export default function Registration() {
   const navigate = useNavigate();
+
+  // Dynamic Form Options (Loaded from Admin settings)
+  const [formOptions, setFormOptions] = useState({
+    relationships: ['স্ত্রী', 'ছেলে', 'মেয়ে', 'অন্যান্য'],
+    degrees: ['দাখিল', 'আলিম', 'ফাজিল', 'কামিল', 'স্নাতক', 'স্নাতকোত্তর', 'এমফিল', 'পিএইচডি', 'অন্যান্য'],
+    kamilSubjects: ['আদব', 'ফিকহ', 'তাফসির', 'হাদিস'],
+    paymentMethods: ['বিকাশ', 'নগদ', 'রকেট', 'ব্যাংক ট্রান্সফার']
+  });
+
+  useEffect(() => {
+    // 1. Check local cached options
+    try {
+      const cached = localStorage.getItem('aluyun_form_options');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setFormOptions(prev => ({
+          relationships: parsed.relationships?.length ? parsed.relationships : prev.relationships,
+          degrees: parsed.degrees?.length ? parsed.degrees : prev.degrees,
+          kamilSubjects: parsed.kamilSubjects?.length ? parsed.kamilSubjects : prev.kamilSubjects,
+          paymentMethods: parsed.paymentMethods?.length ? parsed.paymentMethods : prev.paymentMethods,
+        }));
+      }
+    } catch {}
+
+    // 2. Fetch fresh options from server
+    api.get('/settings').then(res => {
+      if (res.data?.success && res.data?.data?.formOptions) {
+        const remote = res.data.data.formOptions;
+        setFormOptions(prev => ({
+          relationships: remote.relationships?.length ? remote.relationships : prev.relationships,
+          degrees: remote.degrees?.length ? remote.degrees : prev.degrees,
+          kamilSubjects: remote.kamilSubjects?.length ? remote.kamilSubjects : prev.kamilSubjects,
+          paymentMethods: remote.paymentMethods?.length ? remote.paymentMethods : prev.paymentMethods,
+        }));
+      }
+    }).catch(() => {});
+  }, []);
 
   // Friend details
   const [formData, setFormData] = useState({
@@ -87,11 +125,21 @@ export default function Registration() {
   };
 
   // Participant counts & calculation
+  // (৩ বছরের শিশুর জন্য কোনো ফি লাগবে না)
   const friendCount = 1;
   const familyCount = familyMembers.length;
   const totalParticipants = friendCount + familyCount;
+
+  // 3 years or younger child fee exemption
+  const freeChildrenCount = familyMembers.filter((m) => {
+    const ageNum = Number(m.age);
+    const isChild = ['ছেলে', 'মেয়ে', 'অন্যান্য'].includes(m.relationship) && m.relationship !== 'স্ত্রী';
+    return isChild && ageNum > 0 && ageNum <= 3;
+  }).length;
+
+  const payingParticipants = Math.max(1, totalParticipants - freeChildrenCount);
   const perPersonFee = 1000;
-  const totalPayableFee = totalParticipants * perPersonFee;
+  const totalPayableFee = payingParticipants * perPersonFee;
 
   // Bengali number conversion
   const toBangla = (num) => {
@@ -338,15 +386,9 @@ export default function Registration() {
                   className={`select select-bordered w-full bg-slate-50 focus:bg-white ${errors.highestDegree ? 'select-error' : ''}`}
                 >
                   <option value="">নির্বাচন করুন</option>
-                  <option value="দাখিল">দাখিল</option>
-                  <option value="আলিম">আলিম</option>
-                  <option value="ফাজিল">ফাজিল</option>
-                  <option value="কামিল">কামিল</option>
-                  <option value="স্নাতক">স্নাতক</option>
-                  <option value="স্নাতকোত্তর">স্নাতকোত্তর</option>
-                  <option value="এমফিল">এমফিল</option>
-                  <option value="পিএইচডি">পিএইচডি</option>
-                  <option value="অন্যান্য">অন্যান্য</option>
+                  {formOptions.degrees.map((deg) => (
+                    <option key={deg} value={deg}>{deg}</option>
+                  ))}
                 </select>
                 {errors.highestDegree && <p className="text-xs text-red-500 mt-1">{errors.highestDegree}</p>}
               </div>
@@ -364,10 +406,9 @@ export default function Registration() {
                     className={`select select-bordered select-primary w-full bg-slate-50 focus:bg-white ${errors.kamilSubject ? 'select-error' : ''}`}
                   >
                     <option value="">বিষয় নির্বাচন করুন</option>
-                    <option value="আদব">আদব</option>
-                    <option value="ফিকহ">ফিকহ</option>
-                    <option value="তাফসির">তাফসির</option>
-                    <option value="হাদিস">হাদিস</option>
+                    {formOptions.kamilSubjects.map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
                   </select>
                   {errors.kamilSubject && <p className="text-xs text-red-500 mt-1">{errors.kamilSubject}</p>}
                 </div>
@@ -502,10 +543,9 @@ export default function Registration() {
                           onChange={(e) => updateFamilyMember(member.id, 'relationship', e.target.value)}
                           className="select select-bordered select-sm w-full bg-white"
                         >
-                          <option value="স্ত্রী">স্ত্রী</option>
-                          <option value="ছেলে">ছেলে</option>
-                          <option value="মেয়ে">মেয়ে</option>
-                          <option value="অন্যান্য">অন্যান্য</option>
+                          {formOptions.relationships.map((rel) => (
+                            <option key={rel} value={rel}>{rel}</option>
+                          ))}
                         </select>
                       </div>
 
@@ -580,9 +620,19 @@ export default function Registration() {
             </div>
 
             <div className="p-4 bg-emerald-800/50 rounded-2xl border border-gold-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-center sm:text-left">
-                <span className="text-sm text-emerald-100">সর্বমোট প্রদেয় শুভেচ্ছা ফি:</span>
-                <div className="text-xs text-emerald-300">({toBangla(totalParticipants)} জন × ১,০০০ টাকা)</div>
+              <div className="text-center sm:text-left space-y-0.5">
+                <span className="text-sm text-emerald-100 font-semibold">সর্বমোট প্রদেয় শুভেচ্ছা ফি:</span>
+                <div className="text-xs text-emerald-300">
+                  ({toBangla(payingParticipants)} জন × ১,০০০ টাকা)
+                  {freeChildrenCount > 0 && (
+                    <span className="text-amber-300 ml-2 font-medium">
+                      * ৩ বছর বা কম বয়সী {toBangla(freeChildrenCount)} শিশুর ফি ফ্রি
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-gold-300/90 pt-0.5">
+                  (৩ বছরের শিশুর জন্য কোনো ফি লাগবে না)
+                </div>
               </div>
               <div className="text-3xl sm:text-4xl font-extrabold text-gold-400 font-mono">
                 {toBangla(totalPayableFee)} টাকা

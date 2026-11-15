@@ -97,7 +97,7 @@ export default function EventDetails() {
         {/* Introduction & Venue Card */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-emerald-100 space-y-6">
           <div className="prose max-w-none text-slate-700 text-base sm:text-lg leading-relaxed">
-            বন্ধুত্বের বন্ধন সুদৃঢ় করা, পারস্পরিক সৌহার্দ্য বৃদ্ধি এবং পরিবার-পরিজনসহ আনন্দঘন কিছু মুহূর্ত কাটানোর প্রত্যয়ে আমাদের এ আয়োজন।
+            বন্ধুত্বের বন্ধন সুদৃঢ় করা, পারস্পরিক সৌহার্দ্য বৃদ্ধি এবং পরিবার-পরিজনসহ আনন্দঘন কিছু স্মরণীয় মুহূর্ত কাটানোর প্রত্যয়ে এ  আয়োজন।
           </div>
 
           <div className="p-6 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -165,7 +165,7 @@ export default function EventDetails() {
               প্রতি অংশগ্রহণকারীর শুভেচ্ছা ফি ১,০০০/- (এক হাজার) টাকা নির্ধারণ করা হয়েছে।
             </p>
             <p className="text-slate-700 text-sm leading-relaxed">
-              বন্ধু, স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্য ১,০০০ টাকা করে ফি প্রযোজ্য হবে</strong>।
+              বন্ধু, স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্য ১,০০০ টাকা করে ফি প্রযোজ্য হবে (৩ বছরের শিশুর জন্য কোনো ফি লাগবে না)</strong>।
             </p>
           </div>
 
@@ -176,7 +176,7 @@ export default function EventDetails() {
             </li>
             <li className="flex items-start p-3 bg-slate-50 rounded-xl">
               <CheckCircle className="w-5 h-5 text-emerald-700 mr-2 mt-0.5 shrink-0" />
-              <span>অংশগ্রহণকারীর মোট সংখ্যা অনুযায়ী শুভেচ্ছা ফি স্বয়ংক্রিয়ভাবে হিসাব হবে।</span>
+              <span>অংশগ্রহণকারীর মোট সংখ্যা অনুযায়ী শুভেচ্ছা ফি স্বয়ংক্রিয়ভাবে হিসাব হবে (৩ বছর বা তার কম শিশুর জন্য ফি প্রযোজ্য নয়)।</span>
             </li>
             <li className="flex items-start p-3 bg-slate-50 rounded-xl">
               <CheckCircle className="w-5 h-5 text-emerald-700 mr-2 mt-0.5 shrink-0" />
@@ -184,15 +184,19 @@ export default function EventDetails() {
             </li>
             <li className="flex items-start p-3 bg-slate-50 rounded-xl">
               <Gift className="w-5 h-5 text-gold-600 mr-2 mt-0.5 shrink-0" />
-              <span>প্রত্যেক বন্ধুকে প্রতিবারের ন্যায় মিলনমেলার পক্ষ থেকে একটি করে স্মারক উপহার প্রদান করা হবে।</span>
+              <span>মিলনমেলার পক্ষ থেকে প্রত্যেক বন্ধুদের এবং তাঁদের স্ত্রীদেরকে একটি করে উপহার দেওয়া হবে।</span>
             </li>
             <li className="flex items-start p-3 bg-slate-50 rounded-xl">
+              <Award className="w-5 h-5 text-gold-600 mr-2 mt-0.5 shrink-0" />
+              <span>প্রতিযোগিতায় অংশগ্রহণকারী প্রথম ৩ জনকে বিশেষ এবং বাকিদেরকে সাধারণ পুরস্কার দেওয়া হবে।</span>
+            </li>
+            <li className="flex items-start p-3 bg-slate-50 rounded-xl">
+              <Award className="w-5 h-5 text-gold-600 mr-2 mt-0.5 shrink-0" />
+              <span>কুইজ প্রতিযোগিতায় অংশগ্রহণকারী শীর্ষ তিনজন প্রতিযোগীকে বিশেষ পুরস্কার দেওয়া হবে।</span>
+            </li>
+            <li className="flex items-start p-3 bg-slate-50 rounded-xl md:col-span-2">
               <Award className="w-5 h-5 text-gold-600 mr-2 mt-0.5 shrink-0" />
               <span>সর্বপ্রথম তথ্য পূরণ ও রেজিস্ট্রেশন ফি জমাদানকারী <strong>তিনজন বন্ধুকে বিশেষ পুরস্কার</strong> দেওয়া হবে।</span>
-            </li>
-            <li className="flex items-start p-3 bg-slate-50 rounded-xl">
-              <Award className="w-5 h-5 text-gold-600 mr-2 mt-0.5 shrink-0" />
-              <span>কুইজ প্রতিযোগিতায় বিজয়ী বন্ধুদের সন্তান-সন্ততিদের মধ্য থেকে <strong>তিনজনকে বিশেষ পুরস্কার</strong> প্রদান করা হবে।</span>
             </li>
           </ul>
 

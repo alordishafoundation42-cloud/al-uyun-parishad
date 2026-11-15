@@ -17,7 +17,13 @@ let inMemorySettings = {
   quizOpeningTime: '11:00 AM',
   quizDurationMinutes: 20,
   isQuizEnabled: true,
-  isQuizResultsPublished: false
+  isQuizResultsPublished: false,
+  formOptions: {
+    relationships: ['স্ত্রী', 'ছেলে', 'মেয়ে', 'অন্যান্য'],
+    degrees: ['দাখিল', 'আলিম', 'ফাজিল', 'কামিল', 'স্নাতক', 'স্নাতকোত্তর', 'এমফিল', 'পিএইচডি', 'অন্যান্য'],
+    kamilSubjects: ['আদব', 'ফিকহ', 'তাফসির', 'হাদিস'],
+    paymentMethods: ['বিকাশ', 'নগদ', 'রকেট', 'ব্যাংক ট্রান্সফার']
+  }
 };
 
 // Public: Get Settings

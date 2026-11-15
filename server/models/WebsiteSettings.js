@@ -12,7 +12,13 @@ const websiteSettingsSchema = new mongoose.Schema({
   quizOpeningTime: { type: String, default: '11:00 AM' },
   quizDurationMinutes: { type: Number, default: 20 },
   isQuizEnabled: { type: Boolean, default: false },
-  isQuizResultsPublished: { type: Boolean, default: false }
+  isQuizResultsPublished: { type: Boolean, default: false },
+  formOptions: {
+    relationships: { type: [String], default: ['স্ত্রী', 'ছেলে', 'মেয়ে', 'অন্যান্য'] },
+    degrees: { type: [String], default: ['দাখিল', 'আলিম', 'ফাজিল', 'কামিল', 'স্নাতক', 'স্নাতকোত্তর', 'এমফিল', 'পিএইচডি', 'অন্যান্য'] },
+    kamilSubjects: { type: [String], default: ['আদব', 'ফিকহ', 'তাফসির', 'হাদিস'] },
+    paymentMethods: { type: [String], default: ['বিকাশ', 'নগদ', 'রকেট', 'ব্যাংক ট্রান্সফার'] }
+  }
 }, {
   timestamps: true
 });

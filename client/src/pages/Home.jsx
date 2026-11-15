@@ -51,7 +51,7 @@ export default function Home() {
           </div>
 
           <p className="max-w-3xl mx-auto text-emerald-100 text-base sm:text-lg leading-relaxed pt-2">
-            বন্ধুত্বের বন্ধন সুদৃঢ় করা, পারস্পরিক সৌহার্দ্য বৃদ্ধি এবং পরিবার-পরিজনসহ আনন্দঘন কিছু স্মরণীয় মুহূর্ত কাটানোর প্রত্যয়ে আমাদের এ বিশেষ আয়োজন।
+            বন্ধুত্বের বন্ধন সুদৃঢ় করা, পারস্পরিক সৌহার্দ্য বৃদ্ধি এবং পরিবার-পরিজনসহ আনন্দঘন কিছু স্মরণীয় মুহূর্ত কাটানোর প্রত্যয়ে এ  আয়োজন।
           </p>
 
           {/* Countdown Timer */}
@@ -166,18 +166,22 @@ export default function Home() {
               <h3 className="text-xl sm:text-2xl font-bold text-white">
                 পুরস্কার, উপহার ও সৌহার্দ্য
               </h3>
-              <ul className="space-y-3.5 text-sm text-emerald-100">
+              <ul className="space-y-3 text-sm text-emerald-100">
                 <li className="flex items-start">
                   <Gift className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
-                  <span><strong>স্মারক উপহার:</strong> মিলনমেলার পক্ষ থেকে প্রত্যেক বন্ধুকে প্রতিবারের ন্যায় একটি করে উপহার প্রদান করা হবে।</span>
+                  <span>মিলনমেলার পক্ষ থেকে প্রত্যেক বন্ধুদের এবং তাঁদের স্ত্রীদেরকে একটি করে উপহার দেওয়া হবে।</span>
                 </li>
                 <li className="flex items-start">
                   <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
-                  <span><strong>দ্রুত রেজিস্ট্রেশন পুরস্কার:</strong> সর্বপ্রথম তথ্য পূরণ ও শুভেচ্ছা ফি জমাদানকারী তিনজন বন্ধুকে বিশেষ পুরস্কার।</span>
+                  <span>প্রতিযোগিতায় অংশগ্রহণকারী প্রথম ৩ জনকে বিশেষ এবং বাকিদেরকে সাধারণ পুরস্কার দেওয়া হবে।</span>
                 </li>
                 <li className="flex items-start">
                   <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
-                  <span><strong>কুইজ বিজয়ী পুরস্কার:</strong> শিশুদের কুইজ প্রতিযোগিতায় শীর্ষ তিনজন বিজয়ীকে বিশেষ সম্মাননা ও পুরস্কার।</span>
+                  <span>কুইজ প্রতিযোগিতায় অংশগ্রহণকারী শীর্ষ তিনজন প্রতিযোগীকে বিশেষ পুরস্কার দেওয়া হবে।</span>
+                </li>
+                <li className="flex items-start">
+                  <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
+                  <span>সর্বপ্রথম তথ্য পূরণ ও শুভেচ্ছা ফি জমাদানকারী তিনজন বন্ধুকে বিশেষ পুরস্কার দেওয়া হবে।</span>
                 </li>
               </ul>
             </div>
@@ -212,7 +216,7 @@ export default function Home() {
               প্রতি অংশগ্রহণকারীর শুভেচ্ছা ফি ১,০০০ টাকা
             </h2>
             <p className="text-slate-700 leading-relaxed text-sm sm:text-base">
-              বন্ধু, স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্যই ১,০০০ টাকা করে ফি প্রযোজ্য হবে</strong>।
+              বন্ধু, স্ত্রী, সন্তান এবং পরিবারের যেসব সদস্য মিলনমেলায় অংশগ্রহণ করবেন, <strong>প্রত্যেকের জন্যই ১,০০০ টাকা করে ফি প্রযোজ্য হবে (৩ বছরের শিশুর জন্য কোনো ফি লাগবে না)</strong>।
             </p>
             <div className="p-4 bg-white/80 rounded-xl border border-emerald-200 text-sm text-slate-800 space-y-1">
               <p><strong>উদাহরণ:</strong> ১ জন মূল বন্ধু + স্ত্রী + ২ সন্তান = মোট ৪ জন অংশগ্রহণকারী = ৪,০০০ টাকা।</p>

@@ -75,6 +75,7 @@ exports.createRegistration = async (req, res) => {
     }
 
     // Participant Calculation: 1 (Friend) + familyMembers.length
+    // (৩ বছরের শিশুর জন্য কোনো ফি লাগবে না)
     const cleanFamilyMembers = Array.isArray(familyMembers) ? familyMembers.map(m => ({
       name: String(m.name || '').trim(),
       age: Number(m.age) || 1,
@@ -82,8 +83,14 @@ exports.createRegistration = async (req, res) => {
       relationship: m.relationship || 'অন্যান্য'
     })) : [];
 
+    const freeChildrenCount = cleanFamilyMembers.filter(m => {
+      const isChild = ['ছেলে', 'মেয়ে', 'অন্যান্য'].includes(m.relationship) && m.relationship !== 'স্ত্রী';
+      return isChild && m.age > 0 && m.age <= 3;
+    }).length;
+
     const participantCount = 1 + cleanFamilyMembers.length;
-    const totalFee = participantCount * 1000;
+    const payingCount = Math.max(1, participantCount - freeChildrenCount);
+    const totalFee = payingCount * 1000;
     const registrationNumber = await generateRegNumber();
 
     const registrationData = {
