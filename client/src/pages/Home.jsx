@@ -173,11 +173,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
-                  <span>প্রতিযোগিতায় অংশগ্রহণকারী প্রথম ৩ জনকে বিশেষ এবং বাকিদেরকে সাধারণ পুরস্কার দেওয়া হবে।</span>
-                </li>
-                <li className="flex items-start">
-                  <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
-                  <span>কুইজ প্রতিযোগিতায় অংশগ্রহণকারী শীর্ষ তিনজন প্রতিযোগীকে বিশেষ পুরস্কার দেওয়া হবে।</span>
+                  <span>কুইজ প্রতিযোগিতায় অংশগ্রহণকারী প্রথম ৩ জনকে বিশেষ এবং বাকিদেরকে সাধারণ পুরস্কার দেওয়া হবে।</span>
                 </li>
                 <li className="flex items-start">
                   <Award className="w-5 h-5 text-gold-400 mr-2.5 mt-0.5 shrink-0" />
