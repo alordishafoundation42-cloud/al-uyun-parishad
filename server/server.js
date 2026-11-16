@@ -46,15 +46,6 @@ const publicLimiter = rateLimit({
   }
 });
 
-// Fix Vercel rewrites: if Vercel sets req.url to /server.js, restore from x-matched-path
-app.use((req, res, next) => {
-  const matched = req.headers['x-matched-path'];
-  if (matched && (req.url === '/server.js' || req.url === '/server' || req.url.startsWith('/server.js'))) {
-    req.url = matched;
-  }
-  next();
-});
-
 // Health check
 app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   res.status(200).json({
@@ -64,7 +55,7 @@ app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   });
 });
 
-// Mount Routes
+// Mount Routes on /api
 app.use('/api', publicLimiter, publicRoutes);
 app.use('/api/admin', adminRoutes);
 
@@ -76,13 +67,7 @@ app.use('/', publicRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'অনুরোধকৃত এপিআই রুটটি পাওয়া যায়নি',
-    debug: {
-      url: req.url,
-      originalUrl: req.originalUrl,
-      path: req.path,
-      headers: req.headers
-    }
+    message: 'অনুরোধকৃত এপিআই রুটটি পাওয়া যায়নি'
   });
 });
 
