@@ -430,6 +430,94 @@ exports.getQuizQuestions = async (req, res) => {
   return res.status(200).json({ success: true, data: store.questions });
 };
 
+// 10.1 Quiz Leaderboard & Real-time Attempts for Admin
+exports.getQuizLeaderboard = async (req, res) => {
+  try {
+    let attempts = [];
+    if (getDBStatus()) {
+      try {
+        attempts = await QuizAttempt.find().sort({ score: -1, completionTime: 1 }).lean();
+      } catch (err) {
+        console.error('QuizAttempt query error:', err.message);
+      }
+    }
+
+    if ((!attempts || attempts.length === 0) && store.attempts && store.attempts.length > 0) {
+      attempts = [...store.attempts].sort((a, b) => (b.score || 0) - (a.score || 0) || (a.completionTime || 0) - (b.completionTime || 0));
+    }
+
+    // Load registrations for father mapping
+    let registrations = [];
+    if (getDBStatus()) {
+      try {
+        registrations = await Registration.find().lean();
+      } catch {}
+    }
+    if ((!registrations || registrations.length === 0) && store.registrations) {
+      registrations = store.registrations;
+    }
+
+    const regMap = {};
+    registrations.forEach(r => {
+      regMap[String(r._id)] = r;
+      if (r.registrationNumber) regMap[r.registrationNumber] = r;
+    });
+
+    const formattedRankings = attempts.map((att, idx) => {
+      const minutes = Math.floor((att.completionTime || 0) / 60);
+      const seconds = (att.completionTime || 0) % 60;
+      const reg = regMap[String(att.registrationId)] || null;
+
+      return {
+        rank: idx + 1,
+        attemptId: att._id,
+        childName: att.childName,
+        childIdentifier: att.childIdentifier,
+        fatherName: reg?.friendName || 'অজ্ঞাত অভিভাবক',
+        fatherMobile: reg?.mobile || 'N/A',
+        registrationNumber: reg?.registrationNumber || 'N/A',
+        score: att.score || 0,
+        totalMarks: att.totalMarks || 20,
+        completionTime: `${minutes} মিনিট ${seconds} সেকেন্ড`,
+        completionTimeSeconds: att.completionTime || 0,
+        attemptStatus: att.attemptStatus,
+        startedAt: att.startedAt,
+        submittedAt: att.submittedAt,
+        answersCount: Array.isArray(att.answers) ? att.answers.length : 0,
+        isWinner: idx < 3
+      };
+    });
+
+    // Check publication status from DB
+    let isPublished = Boolean(store.settings.isQuizResultsPublished);
+    if (getDBStatus()) {
+      try {
+        const s = await WebsiteSettings.findOne({ key: 'global_settings' }).lean();
+        if (s && s.isQuizResultsPublished !== undefined) {
+          isPublished = Boolean(s.isQuizResultsPublished);
+        }
+      } catch {}
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalAttempts: attempts.length,
+        completedCount: attempts.filter(a => a.attemptStatus === 'Completed').length,
+        inProgressCount: attempts.filter(a => a.attemptStatus === 'InProgress').length,
+        isPublished,
+        rankings: formattedRankings
+      }
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'মেধা তালিকা লোড করতে সমস্যা হয়েছে: ' + error.message
+    });
+  }
+};
+
 exports.addQuizQuestion = async (req, res) => {
   const q = { _id: 'iq_' + Date.now(), ...req.body };
   store.questions.push(q);
@@ -456,13 +544,49 @@ exports.deleteQuizQuestion = async (req, res) => {
 exports.publishQuizResults = async (req, res) => {
   try {
     store.settings.isQuizResultsPublished = true;
+    if (getDBStatus()) {
+      try {
+        await WebsiteSettings.findOneAndUpdate(
+          { key: 'global_settings' },
+          { $set: { isQuizResultsPublished: true } },
+          { upsert: true, new: true }
+        );
+      } catch (err) {
+        console.error('Settings update error:', err.message);
+      }
+    }
+
     let emailsSent = 0;
 
-    const attempts = [...store.attempts].sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
+    let attempts = [];
+    if (getDBStatus()) {
+      try {
+        attempts = await QuizAttempt.find().sort({ score: -1, completionTime: 1 }).lean();
+      } catch {}
+    }
+    if ((!attempts || attempts.length === 0) && store.attempts) {
+      attempts = [...store.attempts].sort((a, b) => (b.score || 0) - (a.score || 0) || (a.completionTime || 0) - (b.completionTime || 0));
+    }
+
+    // Registrations for father email
+    let registrations = [];
+    if (getDBStatus()) {
+      try {
+        registrations = await Registration.find().lean();
+      } catch {}
+    }
+    if ((!registrations || registrations.length === 0) && store.registrations) {
+      registrations = store.registrations;
+    }
+    const regMap = {};
+    registrations.forEach(r => {
+      regMap[String(r._id)] = r;
+      if (r.registrationNumber) regMap[r.registrationNumber] = r;
+    });
 
     for (let i = 0; i < attempts.length; i++) {
       const att = attempts[i];
-      const reg = store.registrations.find(r => String(r._id) === String(att.registrationId));
+      const reg = regMap[String(att.registrationId)];
       const fatherEmail = reg?.email;
       const fatherName = reg?.friendName || 'সম্মানিত বন্ধু';
       const rank = i + 1;
@@ -475,13 +599,13 @@ exports.publishQuizResults = async (req, res) => {
             fatherName,
             childName: att.childName,
             score: att.score,
-            totalMarks: att.totalMarks || 10,
+            totalMarks: att.totalMarks || 20,
             rank,
             isTopThree
           });
           emailsSent += 1;
         } catch (e) {
-          console.error(`Failed to send result email:`, e.message);
+          console.error(`Failed to send result email to ${fatherEmail}:`, e.message);
         }
       }
     }
@@ -497,9 +621,25 @@ exports.publishQuizResults = async (req, res) => {
 
 // 12. Unpublish Quiz Results
 exports.unpublishQuizResults = async (req, res) => {
-  store.settings.isQuizResultsPublished = false;
-  return res.status(200).json({
-    success: true,
-    message: 'কুইজের ফলাফল অপ্রকাশিত করা হয়েছে।'
-  });
+  try {
+    store.settings.isQuizResultsPublished = false;
+    if (getDBStatus()) {
+      try {
+        await WebsiteSettings.findOneAndUpdate(
+          { key: 'global_settings' },
+          { $set: { isQuizResultsPublished: false } },
+          { upsert: true, new: true }
+        );
+      } catch (err) {
+        console.error('Settings update error:', err.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'কুইজের ফলাফল অপ্রকাশিত করা হয়েছে।'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 };

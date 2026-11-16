@@ -12,7 +12,12 @@ import {
   Trophy, 
   Medal,
   Settings,
-  HelpCircle
+  HelpCircle,
+  RefreshCw,
+  ExternalLink,
+  Users,
+  CheckCircle2,
+  PhoneCall
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -28,6 +33,11 @@ export default function QuizManager() {
 
   const [questions, setQuestions] = useState([]);
   const [rankings, setRankings] = useState([]);
+  const [leaderboardStats, setLeaderboardStats] = useState({
+    totalAttempts: 0,
+    completedCount: 0,
+    inProgressCount: 0
+  });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -53,6 +63,7 @@ export default function QuizManager() {
 
   // Bengali number converter
   const toBangla = (num) => {
+    if (num === null || num === undefined) return '';
     const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(num).replace(/[0-9]/g, (w) => digits[+w]);
   };
@@ -61,50 +72,43 @@ export default function QuizManager() {
     setLoading(true);
     try {
       // 1. Settings
-      const setRes = await api.get('/settings');
-      if (setRes.data.success) {
-        setQuizSettings(setRes.data.data);
+      try {
+        const setRes = await api.get('/settings');
+        if (setRes.data.success) {
+          setQuizSettings(setRes.data.data);
+        }
+      } catch (err) {
+        console.warn('Settings load error:', err.message);
       }
 
       // 2. Questions
-      const qRes = await api.get('/admin/quiz/questions');
-      if (qRes.data.success) {
-        setQuestions(qRes.data.data);
-      }
-
-      // 3. Results/Rankings
-      const rRes = await api.get('/quiz/results');
-      if (rRes.data.success && rRes.data.data) {
-        setRankings(rRes.data.data);
-      }
-    } catch {
-      // Demo questions for preview
-      setQuestions([
-        {
-          _id: 'q1',
-          question: 'ইসলামের মৌলিক স্তম্ভ কয়টি?',
-          options: ['৩টি', '৪টি', '৫টি', '৬টি'],
-          correctAnswer: '৫টি',
-          category: 'সাধারণ জ্ঞান',
-          marks: 1,
-          isActive: true
-        },
-        {
-          _id: 'q2',
-          question: 'পবিত্র কুরআনুল কারিম কোন সম্মানিত মাসে প্রথম নাজিল হয়?',
-          options: ['মহররম', 'রমজান', 'রজব', 'জিলহজ্জ'],
-          correctAnswer: 'রমজান',
-          category: 'সাধারণ জ্ঞান',
-          marks: 1,
-          isActive: true
+      try {
+        const qRes = await api.get('/admin/quiz/questions');
+        if (qRes.data.success && Array.isArray(qRes.data.data)) {
+          setQuestions(qRes.data.data);
         }
-      ]);
+      } catch (err) {
+        console.warn('Questions load error:', err.message);
+      }
 
-      setRankings([
-        { rank: 1, childName: 'আব্দুর রহমান', fatherName: 'মোহাম্মদ আব্দুল্লাহ', score: 10, totalMarks: 10, completionTime: '৮ মিনিট ১২ সেকেন্ড' },
-        { rank: 2, childName: 'ফাতিমা জান্নাত', fatherName: 'কাজী একেএম সাইফুদ্দিন মামুন', score: 10, totalMarks: 10, completionTime: '৯ মিনিট ৪৫ সেকেন্ড' },
-        { rank: 3, childName: 'মুহাম্মদ আব্দুল্লাহ', fatherName: 'মাওলানা নজরুল ইসলাম', score: 9, totalMarks: 10, completionTime: '৭ মিনিট ৩০ সেকেন্ড' },
-      ]);
+      // 3. Real-time Leaderboard & Attempts (Admin)
+      try {
+        const rRes = await api.get('/admin/quiz/leaderboard');
+        if (rRes.data.success && rRes.data.data) {
+          const lbData = rRes.data.data;
+          setRankings(lbData.rankings || []);
+          if (lbData.isPublished !== undefined) {
+            setQuizSettings(prev => ({ ...prev, isQuizResultsPublished: lbData.isPublished }));
+          }
+          setLeaderboardStats({
+            totalAttempts: lbData.totalAttempts || 0,
+            completedCount: lbData.completedCount || 0,
+            inProgressCount: lbData.inProgressCount || 0
+          });
+        }
+      } catch (err) {
+        console.warn('Leaderboard load error:', err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -457,60 +461,215 @@ export default function QuizManager() {
 
       {/* TAB 3: RANKINGS & ATTEMPTS */}
       {activeTab === 'rankings' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-2">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">কুইজ মেধা তালিকা ও ফলাফল</h2>
-              <p className="text-xs text-slate-500">নম্বর এবং সমাপ্তির সময়ের ওপর ভিত্তি করে স্বয়ংক্রিয় ক্রম</p>
+        <div className="space-y-6">
+          {/* Summary Stat Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+              <span className="text-[11px] text-slate-500 font-semibold block">মোট অংশগ্রহণকারী সন্তান</span>
+              <div className="text-2xl font-extrabold text-emerald-950 font-mono">
+                {toBangla(leaderboardStats.totalAttempts || rankings.length)}
+              </div>
             </div>
-            <div>
-              {quizSettings.isQuizResultsPublished ? (
-                <span className="badge badge-success text-white font-bold p-3 text-xs">ফলাফল প্রকাশিত</span>
-              ) : (
-                <span className="badge badge-warning font-bold p-3 text-xs">ফলাফল অপ্রকাশিত</span>
-              )}
+
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+              <span className="text-[11px] text-slate-500 font-semibold block">কুইজ সম্পন্ন করেছে</span>
+              <div className="text-2xl font-extrabold text-emerald-700 font-mono">
+                {toBangla(leaderboardStats.completedCount || rankings.filter(r => r.attemptStatus !== 'InProgress').length)}
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+              <span className="text-[11px] text-slate-500 font-semibold block">চলমান / পরীক্ষা দিচ্ছে</span>
+              <div className="text-2xl font-extrabold text-amber-600 font-mono">
+                {toBangla(leaderboardStats.inProgressCount || 0)}
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+              <span className="text-[11px] text-slate-500 font-semibold block">সর্বোচ্চ প্রাপ্ত স্কোর</span>
+              <div className="text-2xl font-extrabold text-gold-600 font-mono">
+                {rankings.length > 0 ? `${toBangla(rankings[0].score)}/${toBangla(rankings[0].totalMarks || 20)}` : '০'}
+              </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="table w-full text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th>স্থান (Rank)</th>
-                  <th>শিশুর নাম</th>
-                  <th>পিতার নাম</th>
-                  <th className="text-center">প্রাপ্ত স্কোর</th>
-                  <th>সমাপ্তির সময়</th>
-                  <th>স্বীকৃতি</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rankings.map((r) => (
-                  <tr key={r.rank} className={r.rank <= 3 ? 'bg-amber-50/40 font-semibold' : ''}>
-                    <td className="font-bold font-mono">
-                      {r.rank <= 3 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                          <Medal className="w-3 h-3 mr-1 text-gold-600" /> #{toBangla(r.rank)}
-                        </span>
-                      ) : (
-                        `#${toBangla(r.rank)}`
-                      )}
-                    </td>
-                    <td className="font-bold text-slate-900">{r.childName}</td>
-                    <td className="text-slate-600">{r.fatherName}</td>
-                    <td className="text-center font-mono font-bold text-emerald-800 text-sm">
-                      {toBangla(r.score)}/{toBangla(r.totalMarks || 10)}
-                    </td>
-                    <td className="font-mono text-slate-500">{toBangla(r.completionTime)}</td>
-                    <td>
-                      {r.rank === 1 && <span className="badge badge-warning text-xs font-bold">১ম স্থান (চ্যাম্পিয়ন)</span>}
-                      {r.rank === 2 && <span className="badge badge-neutral text-xs font-bold">২য় স্থান (রানার-আপ)</span>}
-                      {r.rank === 3 && <span className="badge badge-neutral text-xs font-bold">৩য় স্থান</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Main Card */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
+                  <Trophy className="w-5 h-5 text-gold-500" />
+                  <span>কুইজ মেধা তালিকা ও রিয়েল-টাইম স্কোর</span>
+                </h2>
+                <p className="text-xs text-slate-500">
+                  সঠিক উত্তরের সংখ্যা এবং সম্পন্ন করার দ্রুততার (টাইমিং) ওপর ভিত্তি করে স্বয়ংক্রিয় ক্রম
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={loadData}
+                  disabled={loading}
+                  className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-100"
+                  title="রিফ্রেশ করুন"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                  রিফ্রেশ
+                </button>
+
+                <a
+                  href="/quiz-results"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm btn-outline border-emerald-700 text-emerald-800 hover:bg-emerald-50"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 mr-1" /> পাবলিক ফলাফল পাতা
+                </a>
+
+                {quizSettings.isQuizResultsPublished ? (
+                  <button
+                    type="button"
+                    onClick={handleUnpublishResults}
+                    className="btn btn-sm btn-outline border-red-500 text-red-700 hover:bg-red-50 font-bold"
+                  >
+                    ফলাফল অপ্রকাশিত করুন
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePublishResults}
+                    className="btn btn-sm bg-gold-600 hover:bg-gold-700 text-emerald-950 font-bold shadow-md"
+                  >
+                    <Trophy className="w-4 h-4 mr-1.5" /> চূড়ান্ত ফলাফল প্রকাশ করুন
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Publication Banner */}
+            <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-center justify-between ${
+              quizSettings.isQuizResultsPublished
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                : 'bg-amber-50 text-amber-900 border-amber-200'
+            }`}>
+              <div className="flex items-center space-x-2">
+                {quizSettings.isQuizResultsPublished ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span><strong>ফলাফল প্রকাশিত হয়েছে:</strong> ওয়েবসাইটে শীর্ষ বিজয়ীদের তালিকা উন্মুক্ত এবং সকল অভিভাবক ফলাফল দেখতে পাচ্ছেন।</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span><strong>ফলাফল অপ্রকাশিত (ড্রাফট মোড):</strong> কেবলমাত্র অ্যাডমিন এই মেধা তালিকা দেখতে পাচ্ছেন। ভেন্যুর অনুষ্ঠান শেষে "চূড়ান্ত ফলাফল প্রকাশ করুন" বাটনে ক্লিক করলে তা ওয়েবসাইটে প্রদর্শিত হবে।</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {rankings.length === 0 ? (
+              <div className="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 space-y-2">
+                <Users className="w-12 h-12 text-slate-300 mx-auto" />
+                <p className="text-sm font-semibold text-slate-700">এখনো কোনো সন্তান কুইজে অংশগ্রহণ করেনি</p>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  নিবন্ধিত সন্তানেরা যখন <strong>/quiz</strong> পেইজে বাবার মোবাইল নম্বর দিয়ে কুইজ শুরু ও সম্পন্ন করবে, তাদের স্কোর ও সমাপ্তির সময় এখানে স্বয়ংক্রিয়ভাবে যুক্ত হবে।
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table w-full text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                    <tr>
+                      <th className="w-20">স্থান (Rank)</th>
+                      <th>সন্তানের নাম</th>
+                      <th>পিতার নাম ও রেজিস্ট্রেশন</th>
+                      <th>পিতার মোবাইল</th>
+                      <th className="text-center">প্রাপ্ত স্কোর</th>
+                      <th>সময় লেগেছে</th>
+                      <th>স্বীকৃতি / পুরস্কার</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {rankings.map((r) => (
+                      <tr key={r.rank} className={r.rank <= 3 ? 'bg-amber-50/40 font-semibold' : 'hover:bg-slate-50'}>
+                        <td className="font-bold font-mono">
+                          {r.rank <= 3 ? (
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs ${
+                              r.rank === 1
+                                ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                : r.rank === 2
+                                ? 'bg-slate-100 text-slate-800 border-slate-300'
+                                : 'bg-orange-50 text-orange-900 border-orange-200'
+                            }`}>
+                              <Medal className="w-3.5 h-3.5 mr-1 text-gold-600" /> #{toBangla(r.rank)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-600 pl-2">#{toBangla(r.rank)}</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="font-bold text-slate-900 text-sm">{r.childName}</div>
+                          {r.attemptStatus && (
+                            <span className={`text-[10px] font-medium ${
+                              r.attemptStatus === 'Completed' ? 'text-emerald-700' : 'text-amber-700'
+                            }`}>
+                              {r.attemptStatus === 'Completed' ? 'সম্পন্ন ✓' : 'চলমান / সমাপ্ত'}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="font-semibold text-slate-800">{r.fatherName}</div>
+                          {r.registrationNumber && r.registrationNumber !== 'N/A' && (
+                            <span className="font-mono text-[11px] text-slate-400">
+                              {r.registrationNumber}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {r.fatherMobile && r.fatherMobile !== 'N/A' ? (
+                            <a
+                              href={`tel:${r.fatherMobile}`}
+                              className="font-mono text-emerald-800 hover:underline inline-flex items-center space-x-1"
+                              title="কল করুন"
+                            >
+                              <PhoneCall className="w-3 h-3 text-slate-400" />
+                              <span>{r.fatherMobile}</span>
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 font-mono">N/A</span>
+                          )}
+                        </td>
+                        <td className="text-center font-mono font-bold text-emerald-800 text-sm">
+                          {toBangla(r.score)} / {toBangla(r.totalMarks || 20)}
+                        </td>
+                        <td className="font-mono text-slate-600">{toBangla(r.completionTime)}</td>
+                        <td>
+                          {r.rank === 1 && (
+                            <span className="badge badge-warning text-xs font-bold shadow-2xs">
+                              🏆 ১ম স্থান (চ্যাম্পিয়ন)
+                            </span>
+                          )}
+                          {r.rank === 2 && (
+                            <span className="badge badge-neutral text-xs font-bold">
+                              🥈 ২য় স্থান (রানার-আপ)
+                            </span>
+                          )}
+                          {r.rank === 3 && (
+                            <span className="badge badge-outline border-amber-600 text-amber-900 text-xs font-bold">
+                              🥉 ৩য় স্থান (বিশেষ পুরস্কার)
+                            </span>
+                          )}
+                          {r.rank > 3 && (
+                            <span className="text-[11px] text-slate-500">সাধারণ অংশগ্রহণকারী</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

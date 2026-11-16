@@ -46,7 +46,7 @@ export default function QuizResults() {
             কুইজ প্রতিযোগিতার মেধা তালিকা ও ফলাফল
           </h1>
           <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto">
-            আল উয়ূন পরিষদ বার্ষিক মিলনমেলা–২০২৬ (সপরিবার) এর শিশু কুইজ ফলাফল
+            আল উয়ূন পরিষদ বার্ষিক মিলনমেলা–২০২৬ (সপরিবার) এর সন্তানদের কুইজ মেধা তালিকা
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function QuizResults() {
                         পিতা: {winner.fatherName}
                       </div>
                       <div className="pt-2 border-t border-emerald-800 text-sm font-mono font-bold text-gold-400">
-                        স্কোর: {toBangla(winner.score)}/{toBangla(winner.totalMarks || 10)}
+                        স্কোর: {toBangla(winner.score)}/{toBangla(winner.totalMarks || 20)}
                       </div>
                     </div>
                   ))}
@@ -127,7 +127,7 @@ export default function QuizResults() {
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-700 text-sm">
                       <th className="py-3">স্থান (Rank)</th>
-                      <th>শিশুর নাম</th>
+                      <th>সন্তানের নাম</th>
                       <th>পিতার নাম</th>
                       <th className="text-center">প্রাপ্ত স্কোর</th>
                       <th>সমাপ্তির সময়</th>
@@ -149,7 +149,7 @@ export default function QuizResults() {
                         <td className="font-bold text-slate-900">{item.childName}</td>
                         <td className="text-slate-600">{item.fatherName}</td>
                         <td className="text-center font-mono font-bold text-emerald-800">
-                          {toBangla(item.score)}/{toBangla(item.totalMarks || 10)}
+                          {toBangla(item.score)}/{toBangla(item.totalMarks || 20)}
                         </td>
                         <td className="text-xs text-slate-500 font-mono">{toBangla(item.completionTime)}</td>
                       </tr>
@@ -159,7 +159,7 @@ export default function QuizResults() {
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 text-center">
-                গোপনীয়তা ও শিশু সুরক্ষা বিধিমালার কারণে অভিভাবকদের কোনো ব্যক্তিগত ফোন নম্বর এখানে প্রদর্শিত হয় না।
+                গোপনীয়তা সুরক্ষার কারণে অভিভাবকদের কোনো ব্যক্তিগত ফোন নম্বর এখানে প্রদর্শিত হয় না।
               </div>
             </div>
 

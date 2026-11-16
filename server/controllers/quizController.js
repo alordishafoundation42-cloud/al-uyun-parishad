@@ -422,7 +422,15 @@ exports.submitQuiz = async (req, res) => {
 // 4. Public Quiz Results (Published Only)
 exports.getPublicResults = async (req, res) => {
   try {
-    const isPublished = store.settings.isQuizResultsPublished;
+    let isPublished = Boolean(store.settings.isQuizResultsPublished);
+    if (getDBStatus()) {
+      try {
+        const s = await WebsiteSettings.findOne({ key: 'global_settings' }).lean();
+        if (s && s.isQuizResultsPublished !== undefined) {
+          isPublished = Boolean(s.isQuizResultsPublished);
+        }
+      } catch {}
+    }
 
     if (!isPublished) {
       return res.status(200).json({
@@ -433,20 +441,49 @@ exports.getPublicResults = async (req, res) => {
     }
 
     // Rank attempts: score desc, completionTime asc
-    const attempts = [...store.attempts]
-      .filter(a => ['Completed', 'Expired'].includes(a.attemptStatus))
-      .sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
+    let attempts = [];
+    if (getDBStatus()) {
+      try {
+        attempts = await QuizAttempt.find({ attemptStatus: { $in: ['Completed', 'Expired'] } })
+          .sort({ score: -1, completionTime: 1 })
+          .lean();
+      } catch (err) {
+        console.error('QuizAttempt getPublicResults query error:', err.message);
+      }
+    }
+
+    if ((!attempts || attempts.length === 0) && store.attempts) {
+      attempts = [...store.attempts]
+        .filter(a => ['Completed', 'Expired'].includes(a.attemptStatus))
+        .sort((a, b) => (b.score || 0) - (a.score || 0) || (a.completionTime || 0) - (b.completionTime || 0));
+    }
+
+    // Load registrations for father name
+    let registrations = [];
+    if (getDBStatus()) {
+      try {
+        registrations = await Registration.find().lean();
+      } catch {}
+    }
+    if ((!registrations || registrations.length === 0) && store.registrations) {
+      registrations = store.registrations;
+    }
+    const regMap = {};
+    registrations.forEach(r => {
+      regMap[String(r._id)] = r;
+      if (r.registrationNumber) regMap[r.registrationNumber] = r;
+    });
 
     const rankings = attempts.map((att, idx) => {
-      const minutes = Math.floor(att.completionTime / 60);
-      const seconds = att.completionTime % 60;
-      const reg = store.registrations.find(r => String(r._id) === String(att.registrationId));
+      const minutes = Math.floor((att.completionTime || 0) / 60);
+      const seconds = (att.completionTime || 0) % 60;
+      const reg = regMap[String(att.registrationId)];
       return {
         rank: idx + 1,
         childName: att.childName,
         fatherName: reg?.friendName || 'সম্মানিত অভিভাবক',
-        score: att.score,
-        totalMarks: att.totalMarks || 10,
+        score: att.score || 0,
+        totalMarks: att.totalMarks || 20,
         completionTime: `${minutes} মিনিট ${seconds} সেকেন্ড`,
         isWinner: idx < 3
       };

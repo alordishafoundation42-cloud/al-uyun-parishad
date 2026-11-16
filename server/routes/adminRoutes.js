@@ -25,6 +25,8 @@ router.put('/payments/:id/reject', adminController.rejectPayment);
 router.post('/emails/:id/resend', adminController.resendConfirmationEmail);
 
 // Quiz Management
+router.get('/quiz/leaderboard', adminController.getQuizLeaderboard);
+router.get('/quiz/attempts', adminController.getQuizLeaderboard);
 router.get('/quiz/questions', adminController.getQuizQuestions);
 router.post('/quiz/questions', adminController.addQuizQuestion);
 router.put('/quiz/questions/:id', adminController.updateQuizQuestion);
