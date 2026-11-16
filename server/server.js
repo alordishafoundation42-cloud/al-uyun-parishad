@@ -76,7 +76,13 @@ app.use('/', publicRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'অনুরোধকৃত এপিআই রুটটি পাওয়া যায়নি'
+    message: 'অনুরোধকৃত এপিআই রুটটি পাওয়া যায়নি',
+    debug: {
+      url: req.url,
+      originalUrl: req.originalUrl,
+      path: req.path,
+      matchedPath: req.headers['x-matched-path']
+    }
   });
 });
 
