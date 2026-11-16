@@ -16,7 +16,8 @@ import {
   CheckCircle,
   HelpCircle,
   ArrowRight,
-  Building2
+  Building2,
+  Banknote
 } from 'lucide-react';
 
 export default function Registration() {
@@ -70,6 +71,7 @@ export default function Registration() {
     presentAddress: '',
     permanentAddress: '',
     paymentMethod: 'বিকাশ',
+    cashReceiver: '',
     transactionId: '',
     paymentDate: new Date().toISOString().split('T')[0],
     senderMobile: '',
@@ -147,6 +149,15 @@ export default function Registration() {
     return String(num).replace(/[0-9]/g, (w) => digits[+w]);
   };
 
+  // Check if Hand Cash payment
+  const isCash = Boolean(
+    formData.paymentMethod && (
+      formData.paymentMethod.includes('হাতে') ||
+      formData.paymentMethod.includes('ক্যাশ') ||
+      formData.paymentMethod.toLowerCase().includes('cash')
+    )
+  );
+
   // Form Validation
   const validateForm = () => {
     const newErrors = {};
@@ -174,8 +185,22 @@ export default function Registration() {
     if (!formData.permanentAddress.trim()) newErrors.permanentAddress = 'স্থায়ী/গ্রামের ঠিকানা লিখুন';
 
     // Payment validation
-    if (!formData.transactionId.trim()) newErrors.transactionId = 'ট্রানজ্যাকশন আইডি বা ব্যাংক রেফারেন্স দিন';
-    if (!formData.senderMobile.trim()) newErrors.senderMobile = 'যে নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন';
+    const isCash = Boolean(
+      formData.paymentMethod && (
+        formData.paymentMethod.includes('হাতে') ||
+        formData.paymentMethod.includes('ক্যাশ') ||
+        formData.paymentMethod.toLowerCase().includes('cash')
+      )
+    );
+
+    if (isCash) {
+      if (!formData.cashReceiver.trim()) {
+        newErrors.cashReceiver = 'কার কাছে নগদ টাকা জমা দিয়েছেন তাঁর নাম ও পরিচয় উল্লেখ করুন';
+      }
+    } else {
+      if (!formData.transactionId.trim()) newErrors.transactionId = 'ট্রানজ্যাকশন আইডি বা ব্যাংক রেফারেন্স দিন';
+      if (!formData.senderMobile.trim()) newErrors.senderMobile = 'যে নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন';
+    }
     if (!formData.paymentDate) newErrors.paymentDate = 'পেমেন্টের তারিখ নির্বাচন করুন';
 
     // Family members validation
@@ -226,9 +251,10 @@ export default function Registration() {
         participantCount: totalParticipants,
         totalFee: totalPayableFee,
         paymentMethod: formData.paymentMethod,
-        transactionId: formData.transactionId.trim(),
+        cashReceiver: formData.cashReceiver ? formData.cashReceiver.trim() : '',
+        transactionId: formData.transactionId ? formData.transactionId.trim() : '',
         paymentDate: formData.paymentDate,
-        senderMobile: formData.senderMobile.trim(),
+        senderMobile: formData.senderMobile ? formData.senderMobile.trim() : '',
         receiptUrl: formData.receiptUrl || null,
       };
 
@@ -640,46 +666,76 @@ export default function Registration() {
             </div>
 
             {/* Payment Options Banner */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Option 1: bKash */}
-              <div className={`p-5 rounded-2xl border transition-all ${
-                formData.paymentMethod === 'বিকাশ' 
-                  ? 'bg-pink-50/70 border-pink-300 ring-2 ring-pink-600/20' 
-                  : 'bg-slate-50 border-slate-200'
-              }`}>
+              <div 
+                onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'বিকাশ' }))}
+                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                  formData.paymentMethod === 'বিকাশ' 
+                    ? 'bg-pink-50/80 border-pink-400 ring-2 ring-pink-600/30 shadow-sm' 
+                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                }`}
+              >
                 <div className="flex items-center justify-between pb-2 border-b border-pink-200/50">
-                  <span className="text-xs font-bold text-pink-800 uppercase tracking-wider">পদ্ধতি ১ : বিকাশ (পার্সোনাল)</span>
-                  <span className="badge badge-sm bg-pink-700 text-white border-none">Send Money</span>
+                  <span className="text-xs font-bold text-pink-800 uppercase tracking-wider">পদ্ধতি ১ : বিকাশ</span>
+                  <span className="badge badge-xs bg-pink-700 text-white border-none">Send Money</span>
                 </div>
                 <div className="pt-2 space-y-1">
-                  <div className="text-xs text-slate-500">প্রাপক: কাজী একেএম সাইফুদ্দিন মামুন</div>
-                  <div className="text-xl font-extrabold text-pink-800 font-mono tracking-wider">+880 1819-173608</div>
-                  <p className="text-xs text-slate-600 pt-1">
-                    মোট <strong>{toBangla(totalPayableFee)} টাকা</strong> বিকাশ করে প্রাপ্ত TrxID দিন।
+                  <div className="text-[11px] text-slate-500">প্রাপক: কাজী একেএম সাইফুদ্দিন মামুন</div>
+                  <div className="text-lg font-extrabold text-pink-800 font-mono tracking-wider">+880 1819-173608</div>
+                  <p className="text-[11px] text-slate-600 pt-0.5">
+                    মোট <strong>{toBangla(totalPayableFee)} ৳</strong> বিকাশ করে TrxID দিন।
                   </p>
                 </div>
               </div>
 
               {/* Option 2: Bank Deposit */}
-              <div className={`p-5 rounded-2xl border transition-all ${
-                formData.paymentMethod === 'ব্যাংক' 
-                  ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-600/20' 
-                  : 'bg-slate-50 border-slate-200'
-              }`}>
+              <div 
+                onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'ব্যাংক' }))}
+                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                  formData.paymentMethod === 'ব্যাংক' 
+                    ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-600/30 shadow-sm' 
+                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                }`}
+              >
                 <div className="flex items-center justify-between pb-2 border-b border-emerald-200/50">
                   <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center">
                     <Building2 className="w-3.5 h-3.5 mr-1 text-emerald-700" />
-                    পদ্ধতি ২ : ব্যাংক একাউন্ট
+                    পদ্ধতি ২ : ব্যাংক
                   </span>
-                  <span className="badge badge-sm bg-emerald-800 text-white border-none">AIBL</span>
+                  <span className="badge badge-xs bg-emerald-800 text-white border-none">AIBL</span>
                 </div>
-                <div className="pt-2 space-y-1 text-xs text-slate-700">
-                  <div><strong>ব্যাংক:</strong> আল-আরাফাহ্ ইসলামী ব্যাংক লিমিটেড</div>
-                  <div><strong>শাখা:</strong> মুরাদপুর শাখা, চট্টগ্রাম</div>
-                  <div><strong>হিসাবের নাম:</strong> <span className="font-mono font-bold">ALYOUN PORISHAD</span></div>
-                  <div><strong>হিসাব নং:</strong> <span className="font-mono font-extrabold text-emerald-900 text-sm">1091120017273</span></div>
-                  <p className="text-xs text-slate-600 pt-0.5">
-                    ব্যাংক ডিপোজিট বা ট্রান্সফার করে স্লিপ নং/রেফারেন্স দিন।
+                <div className="pt-2 space-y-0.5 text-[11px] text-slate-700">
+                  <div><strong>আল-আরাফাহ্ ইসলামী ব্যাংক</strong></div>
+                  <div>মুরাদপুর শাখা | হিসাব: <span className="font-mono font-bold">ALYOUN PORISHAD</span></div>
+                  <div>হিসাব নং: <span className="font-mono font-extrabold text-emerald-900 text-xs">1091120017273</span></div>
+                  <p className="text-[10px] text-slate-500 pt-0.5">
+                    ডিপোজিট করে স্লিপ নং/রেফারেন্স দিন।
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 3: Hand Cash */}
+              <div 
+                onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'হাতে হাতে / ক্যাশ' }))}
+                className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                  isCash 
+                    ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-600/30 shadow-sm' 
+                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-amber-200/50">
+                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center">
+                    <Banknote className="w-3.5 h-3.5 mr-1 text-amber-700" />
+                    পদ্ধতি ৩ : হাতে হাতে ক্যাশ
+                  </span>
+                  <span className="badge badge-xs bg-amber-700 text-white border-none">Cash</span>
+                </div>
+                <div className="pt-2 space-y-1">
+                  <div className="text-[11px] text-slate-600">সরাসরি ক্যাশ প্রদান</div>
+                  <div className="text-sm font-bold text-amber-900">সমন্বয়ক বা বন্ধুর নিকট</div>
+                  <p className="text-[11px] text-slate-600 pt-0.5">
+                    কার হাতে নগদ ফি জমা দিয়েছেন তাঁর নাম নিচে উল্লেখ করুন।
                   </p>
                 </div>
               </div>
@@ -688,13 +744,13 @@ export default function Registration() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
               {/* Payment Method Selector */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">পেমেন্ট মাধ্যম সিলেক্ট করুন *</label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-sm font-semibold text-slate-800">পেমেন্ট মাধ্যম নির্বাচন করুন *</label>
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'বিকাশ' }))}
-                    className={`py-2.5 px-4 rounded-xl border text-sm font-bold flex items-center justify-center transition-all ${
+                    className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center transition-all ${
                       formData.paymentMethod === 'বিকাশ'
                         ? 'bg-pink-700 text-white border-pink-700 shadow-sm'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -705,7 +761,7 @@ export default function Registration() {
                   <button
                     type="button"
                     onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'ব্যাংক' }))}
-                    className={`py-2.5 px-4 rounded-xl border text-sm font-bold flex items-center justify-center transition-all ${
+                    className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center transition-all ${
                       formData.paymentMethod === 'ব্যাংক'
                         ? 'bg-emerald-800 text-white border-emerald-800 shadow-sm'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -713,53 +769,121 @@ export default function Registration() {
                   >
                     ব্যাংক একাউন্ট
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((p) => ({ ...p, paymentMethod: 'হাতে হাতে / ক্যাশ' }))}
+                    className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center transition-all ${
+                      isCash
+                        ? 'bg-amber-700 text-white border-amber-700 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    হাতে হাতে / ক্যাশ
+                  </button>
                 </div>
               </div>
 
-              {/* Transaction ID */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">
-                  ট্রানজ্যাকশন আইডি (TrxID) / ব্যাংক রেফারেন্স *
-                </label>
-                <input
-                  type="text"
-                  name="transactionId"
-                  value={formData.transactionId}
-                  onChange={handleInputChange}
-                  placeholder="যেমন: BL9X7K290 অথবা ডিপোজিট স্লিপ নং"
-                  className={`input input-bordered w-full bg-slate-50 focus:bg-white font-mono ${errors.transactionId ? 'input-error' : ''}`}
-                />
-                {errors.transactionId && <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>}
-              </div>
+              {/* Conditional Fields based on isCash */}
+              {isCash ? (
+                <>
+                  {/* Cash Receiver Name */}
+                  <div className="sm:col-span-2 space-y-1.5 p-4 bg-amber-50/80 border-2 border-amber-300 rounded-2xl">
+                    <label className="text-sm font-bold text-amber-950 flex items-center">
+                      <Banknote className="w-4 h-4 mr-1.5 text-amber-700" />
+                      কার কাছে নগদ টাকা জমা দিয়েছেন? *
+                    </label>
+                    <input
+                      type="text"
+                      name="cashReceiver"
+                      value={formData.cashReceiver}
+                      onChange={handleInputChange}
+                      placeholder="যেমন: কাজী একেএম সাইফুদ্দিন মামুন ভাই / দায়িত্বশীল বন্ধুর নাম"
+                      className={`input input-bordered w-full bg-white focus:bg-white text-sm ${errors.cashReceiver ? 'input-error' : ''}`}
+                    />
+                    {errors.cashReceiver && (
+                      <p className="text-xs text-red-600 font-medium mt-1">{errors.cashReceiver}</p>
+                    )}
+                    <p className="text-xs text-amber-800 mt-1">
+                      💡 আপনি যার কাছে নগদ টাকা হস্তান্তর করেছেন, তাঁর নাম ও পরিচয় এখানে লিখুন যাতে যাচাই কমিটি দ্রুত নিশ্চিত করতে পারে।
+                    </p>
+                  </div>
 
-              {/* Sender Mobile */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">
-                  প্রেরক মোবাইল নম্বর (যে নম্বর থেকে পাঠিয়েছেন) *
-                </label>
-                <input
-                  type="text"
-                  name="senderMobile"
-                  value={formData.senderMobile}
-                  onChange={handleInputChange}
-                  placeholder="018XXXXXXXX"
-                  className={`input input-bordered w-full bg-slate-50 focus:bg-white font-mono ${errors.senderMobile ? 'input-error' : ''}`}
-                />
-                {errors.senderMobile && <p className="text-xs text-red-500 mt-1">{errors.senderMobile}</p>}
-              </div>
+                  {/* Payment Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">নগদ টাকা জমাদানের তারিখ *</label>
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      value={formData.paymentDate}
+                      onChange={handleInputChange}
+                      className={`input input-bordered w-full bg-slate-50 focus:bg-white ${errors.paymentDate ? 'input-error' : ''}`}
+                    />
+                    {errors.paymentDate && <p className="text-xs text-red-500 mt-1">{errors.paymentDate}</p>}
+                  </div>
 
-              {/* Payment Date */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">পেমেন্টের তারিখ *</label>
-                <input
-                  type="date"
-                  name="paymentDate"
-                  value={formData.paymentDate}
-                  onChange={handleInputChange}
-                  className={`input input-bordered w-full bg-slate-50 focus:bg-white ${errors.paymentDate ? 'input-error' : ''}`}
-                />
-                {errors.paymentDate && <p className="text-xs text-red-500 mt-1">{errors.paymentDate}</p>}
-              </div>
+                  {/* Cash Receipt / Reference (Optional) */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">
+                      রশিদ নম্বর / নোট (যদি থাকে)
+                    </label>
+                    <input
+                      type="text"
+                      name="transactionId"
+                      value={formData.transactionId}
+                      onChange={handleInputChange}
+                      placeholder="ক্যাশ মানি রসিদ নম্বর বা নোট (ঐচ্ছিক)"
+                      className="input input-bordered w-full bg-slate-50 focus:bg-white font-mono"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Transaction ID */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">
+                      ট্রানজ্যাকশন আইডি (TrxID) / ব্যাংক রেফারেন্স *
+                    </label>
+                    <input
+                      type="text"
+                      name="transactionId"
+                      value={formData.transactionId}
+                      onChange={handleInputChange}
+                      placeholder="যেমন: BL9X7K290 অথবা ডিপোজিট স্লিপ নং"
+                      className={`input input-bordered w-full bg-slate-50 focus:bg-white font-mono ${errors.transactionId ? 'input-error' : ''}`}
+                    />
+                    {errors.transactionId && <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>}
+                  </div>
+
+                  {/* Sender Mobile */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">
+                      প্রেরক মোবাইল নম্বর (যে নম্বর থেকে পাঠিয়েছেন) *
+                    </label>
+                    <input
+                      type="text"
+                      name="senderMobile"
+                      value={formData.senderMobile}
+                      onChange={handleInputChange}
+                      placeholder="018XXXXXXXX"
+                      className={`input input-bordered w-full bg-slate-50 focus:bg-white font-mono ${errors.senderMobile ? 'input-error' : ''}`}
+                    />
+                    {errors.senderMobile && <p className="text-xs text-red-500 mt-1">{errors.senderMobile}</p>}
+                  </div>
+
+                  {/* Payment Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">পেমেন্টের তারিখ *</label>
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      value={formData.paymentDate}
+                      onChange={handleInputChange}
+                      className={`input input-bordered w-full bg-slate-50 focus:bg-white ${errors.paymentDate ? 'input-error' : ''}`}
+                    />
+                    {errors.paymentDate && <p className="text-xs text-red-500 mt-1">{errors.paymentDate}</p>}
+                  </div>
+                </>
+              )}
 
               {/* Optional Receipt note */}
               <div className="sm:col-span-2 space-y-1.5">

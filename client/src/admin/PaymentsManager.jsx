@@ -188,13 +188,24 @@ export default function PaymentsManager() {
                     </td>
                     <td>
                       <span className={`px-2 py-0.5 rounded-full font-bold ${
-                        p.paymentMethod === 'বিকাশ' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'
+                        p.paymentMethod === 'বিকাশ' 
+                          ? 'bg-pink-100 text-pink-800' 
+                          : (p.paymentMethod?.includes('হাতে') || p.paymentMethod?.includes('ক্যাশ'))
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-blue-100 text-blue-800'
                       }`}>
                         {p.paymentMethod}
                       </span>
                     </td>
                     <td className="font-mono font-bold text-slate-800 bg-slate-50 px-2 py-1 rounded">
-                      {p.transactionId}
+                      {p.cashReceiver ? (
+                        <div>
+                          <div className="text-[11px] text-amber-900 font-sans font-bold">গ্রহীতা: {p.cashReceiver}</div>
+                          {p.transactionId && <div className="text-[10px] text-slate-400">{p.transactionId}</div>}
+                        </div>
+                      ) : (
+                        p.transactionId || '—'
+                      )}
                     </td>
                     <td className="font-mono text-slate-600">{p.senderMobile}</td>
                     <td className="font-mono font-bold text-emerald-800 text-sm">

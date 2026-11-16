@@ -28,11 +28,12 @@ exports.createRegistration = async (req, res) => {
       presentAddress,
       permanentAddress,
       familyMembers = [],
-      paymentMethod,
+      paymentMethod = 'বিকাশ',
       transactionId,
       paymentDate,
       senderMobile,
-      receiptUrl
+      receiptUrl,
+      cashReceiver
     } = req.body;
 
     // Basic Validation
@@ -50,11 +51,29 @@ exports.createRegistration = async (req, res) => {
       });
     }
 
-    if (!transactionId || !senderMobile) {
-      return res.status(400).json({
-        success: false,
-        message: 'পেমেন্টের ট্রানজ্যাকশন আইডি ও প্রেরক মোবাইল নম্বর প্রদান করুন।'
-      });
+    // Check if hand cash payment
+    const isCashPayment = Boolean(
+      paymentMethod && (
+        paymentMethod.includes('হাতে') ||
+        paymentMethod.includes('ক্যাশ') ||
+        paymentMethod.toLowerCase().includes('cash')
+      )
+    );
+
+    if (isCashPayment) {
+      if (!cashReceiver || !cashReceiver.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'হাতে হাতে ক্যাশ ফি জমার ক্ষেত্রে কার কাছে টাকা জমা দিয়েছেন তাঁর নাম প্রদান করা আবশ্যক।'
+        });
+      }
+    } else {
+      if (!transactionId || !senderMobile) {
+        return res.status(400).json({
+          success: false,
+          message: 'পেমেন্টের ট্রানজ্যাকশন আইডি ও প্রেরক মোবাইল নম্বর প্রদান করুন।'
+        });
+      }
     }
 
     const cleanMobile = mobile.replace(/\D/g, '');
@@ -106,10 +125,13 @@ exports.createRegistration = async (req, res) => {
       familyMembers: cleanFamilyMembers,
       participantCount,
       totalFee,
-      paymentMethod,
-      transactionId: transactionId.trim(),
+      paymentMethod: (paymentMethod || 'বিকাশ').trim(),
+      cashReceiver: (cashReceiver || '').trim(),
+      transactionId: (transactionId && transactionId.trim()) 
+        ? transactionId.trim() 
+        : (isCashPayment ? `CASH-${cleanMobile.slice(-4)}` : ''),
       paymentDate: paymentDate || new Date(),
-      senderMobile: senderMobile.trim(),
+      senderMobile: (senderMobile && senderMobile.trim()) ? senderMobile.trim() : cleanMobile,
       receiptUrl: receiptUrl || null,
       paymentStatus: 'Pending',
       registrationStatus: 'অপেক্ষমাণ',

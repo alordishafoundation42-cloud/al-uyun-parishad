@@ -31,8 +31,14 @@ exports.getDashboardStats = async (req, res) => {
       }
     });
 
-    const totalQuizParticipants = store.attempts.length;
-    const completedQuizCount = store.attempts.filter(a => a.attemptStatus === 'Completed').length;
+    let totalQuizParticipants = store.attempts.length;
+    let completedQuizCount = store.attempts.filter(a => a.attemptStatus === 'Completed').length;
+    if (getDBStatus()) {
+      try {
+        totalQuizParticipants = await QuizAttempt.countDocuments();
+        completedQuizCount = await QuizAttempt.countDocuments({ attemptStatus: 'Completed' });
+      } catch (err) {}
+    }
 
     return res.status(200).json({
       success: true,
@@ -317,29 +323,103 @@ exports.resendConfirmationEmail = async (req, res) => {
 // 9. Export Registrations as CSV
 exports.exportRegistrationsCSV = async (req, res) => {
   try {
-    const list = store.registrations;
-    const header = ['RegNumber', 'FriendName', 'Mobile', 'Email', 'Profession', 'Degree', 'Participants', 'TotalFee', 'PaymentMethod', 'TrxID', 'PaymentStatus', 'RegistrationStatus'];
-    const rows = list.map(r => [
-      `"${r.registrationNumber}"`,
-      `"${r.friendName}"`,
-      `"${r.mobile}"`,
-      `"${r.email}"`,
-      `"${r.profession}"`,
-      `"${r.highestDegree}"`,
-      r.participantCount,
-      r.totalFee,
-      `"${r.paymentMethod}"`,
-      `"${r.transactionId}"`,
-      `"${r.paymentStatus}"`,
-      `"${r.registrationStatus}"`
-    ]);
+    let list = [];
+    if (getDBStatus()) {
+      try {
+        list = await Registration.find().sort({ createdAt: 1 });
+      } catch (dbErr) {
+        console.error('CSV Export DB query error:', dbErr.message);
+      }
+    }
 
-    const csvContent = [header.join(','), ...rows.map(row => row.join(','))].join('\n');
+    // Fallback to in-memory store if DB is empty or offline and store has records
+    if ((!list || list.length === 0) && store.registrations && store.registrations.length > 0) {
+      list = store.registrations;
+    }
+
+    const header = [
+      'রেজিস্ট্রেশন নম্বর',
+      'বন্ধুর নাম',
+      'মোবাইল নম্বর',
+      'ইমেইল',
+      'পেশা',
+      'সর্বোচ্চ ডিগ্রি',
+      'কামিল বিষয়',
+      'বর্তমান ঠিকানা',
+      'স্থায়ী ঠিকানা',
+      'মোট অংশগ্রহণকারী (জন)',
+      'পারিবারিক সদস্য সংখ্যা',
+      'পারিবারিক সদস্যদের বিস্তারিত বিবরণ',
+      'মোট শুভেচ্ছা ফি (টাকা)',
+      'পেমেন্ট মাধ্যম',
+      'ক্যাশ জমার গ্রহীতা (কার কাছে জমা)',
+      'ট্রানজেকশন আইডি (TrxID)',
+      'টাকা প্রেরক নম্বর',
+      'পেমেন্টের তারিখ',
+      'পেমেন্ট অবস্থা',
+      'রেজিস্ট্রেশন অবস্থা',
+      'পেমেন্ট যাচাইয়ের সময়',
+      'এডমিন নোট',
+      'রেজিস্ট্রেশনের তারিখ ও সময়'
+    ];
+
+    const safeVal = (v) => {
+      if (v === undefined || v === null) return '""';
+      const str = String(v).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const formatDate = (d) => {
+      if (!d) return '';
+      try {
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return String(d);
+        return dt.toISOString().replace('T', ' ').substring(0, 19);
+      } catch {
+        return String(d);
+      }
+    };
+
+    const rows = (list || []).map(r => {
+      const familyCount = (r.familyMembers && Array.isArray(r.familyMembers)) ? r.familyMembers.length : 0;
+      const familyDetails = (familyCount > 0)
+        ? r.familyMembers.map(m => `${m.name || 'সদস্য'} (${m.relationship || 'সম্পর্ক অজ্ঞাত'}, ${m.age || 0} বছর, ${m.gender || ''})`).join('; ')
+        : 'পারিবারিক সদস্য নেই';
+
+      return [
+        safeVal(r.registrationNumber),
+        safeVal(r.friendName),
+        safeVal(r.mobile),
+        safeVal(r.email),
+        safeVal(r.profession),
+        safeVal(r.highestDegree),
+        safeVal(r.kamilSubject || 'প্রযোজ্য নয়'),
+        safeVal(r.presentAddress),
+        safeVal(r.permanentAddress),
+        safeVal(r.participantCount || (1 + familyCount)),
+        safeVal(familyCount),
+        safeVal(familyDetails),
+        safeVal(r.totalFee || 1000),
+        safeVal(r.paymentMethod),
+        safeVal(r.cashReceiver || (r.paymentMethod && r.paymentMethod.includes('হাতে') ? 'উল্লেখ নেই' : 'প্রযোজ্য নয়')),
+        safeVal(r.transactionId),
+        safeVal(r.senderMobile),
+        safeVal(formatDate(r.paymentDate)),
+        safeVal(r.paymentStatus),
+        safeVal(r.registrationStatus),
+        safeVal(formatDate(r.paymentVerifiedAt)),
+        safeVal(r.adminNote || ''),
+        safeVal(formatDate(r.createdAt))
+      ].join(',');
+    });
+
+    const csvContent = [header.join(','), ...rows].join('\r\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=Al_Uyun_Parishad_2026_Registrations.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="Al_Uyun_Parishad_2026_Registrations.csv"');
     return res.status(200).send('\uFEFF' + csvContent);
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('Export CSV Error:', error);
+    return res.status(500).json({ success: false, message: 'CSV ফাইল প্রস্তুত করতে ব্যর্থ হয়েছে: ' + error.message });
   }
 };
 

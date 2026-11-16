@@ -12,6 +12,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import api from '../services/api';
+import { downloadRegistrationsCSV } from '../utils/exportCsv';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
     completedQuizCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   // Bengali number converter
   const toBangla = (num) => {
@@ -56,6 +58,17 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await downloadRegistrationsCSV();
+    } catch (err) {
+      alert(err.message || 'CSV ফাইল ডাউনলোড করতে ব্যর্থ হয়েছে।');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       
@@ -77,12 +90,23 @@ export default function AdminDashboard() {
           >
             <Users className="w-4 h-4 mr-1.5" /> সকল রেজিস্ট্রেশন
           </Link>
-          <a
-            href="/api/admin/registrations/export"
-            className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-200"
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-200 flex items-center gap-1.5"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-1" /> CSV ডাউনলোড
-          </a>
+            {exporting ? (
+              <>
+                <span className="loading loading-spinner loading-xs"></span>
+                ডাউনলোড হচ্ছে...
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> CSV ডাউনলোড
+              </>
+            )}
+          </button>
         </div>
       </div>
 

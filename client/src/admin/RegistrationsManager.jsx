@@ -16,10 +16,12 @@ import {
   MapPin
 } from 'lucide-react';
 import api from '../services/api';
+import { downloadRegistrationsCSV } from '../utils/exportCsv';
 
 export default function RegistrationsManager() {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('All');
   const [selectedReg, setSelectedReg] = useState(null);
@@ -79,6 +81,17 @@ export default function RegistrationsManager() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await downloadRegistrationsCSV();
+    } catch (err) {
+      alert(err.message || 'CSV ফাইল ডাউনলোড করতে ব্যর্থ হয়েছে।');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       
@@ -88,12 +101,23 @@ export default function RegistrationsManager() {
           <h1 className="text-2xl font-bold text-slate-900">রেজিস্ট্রেশন ব্যবস্থাপনা</h1>
           <p className="text-xs text-slate-500">সকল নিবন্ধিত বন্ধু ও পারিবারিক সদস্যদের তালিকা</p>
         </div>
-        <a
-          href="/api/admin/registrations/export"
-          className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-200"
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={exporting}
+          className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-200 flex items-center gap-1.5"
         >
-          <FileSpreadsheet className="w-4 h-4 mr-1.5" /> সম্পূর্ণ তালিকা CSV ডাউনলোড
-        </a>
+          {exporting ? (
+            <>
+              <span className="loading loading-spinner loading-xs"></span>
+              ডাউনলোড হচ্ছে...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> সম্পূর্ণ তালিকা CSV ডাউনলোড
+            </>
+          )}
+        </button>
       </div>
 
       {message && (
@@ -270,12 +294,21 @@ export default function RegistrationsManager() {
             </div>
 
             {/* Payment Summary */}
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs flex justify-between items-center">
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
-                <span className="text-slate-600">পেমেন্ট মেথড: <strong>{selectedReg.paymentMethod}</strong> (TrxID: {selectedReg.transactionId})</span>
-                <div className="text-slate-500">প্রেরক নম্বর: {selectedReg.senderMobile}</div>
+                <div className="text-slate-700">
+                  পেমেন্ট মাধ্যম: <strong className="text-emerald-950 font-bold">{selectedReg.paymentMethod}</strong>
+                  {selectedReg.transactionId && ` (TrxID: ${selectedReg.transactionId})`}
+                </div>
+                {selectedReg.cashReceiver ? (
+                  <div className="text-amber-900 font-bold mt-1 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-lg inline-block">
+                    💵 ক্যাশ জমার গ্রহীতা: {selectedReg.cashReceiver}
+                  </div>
+                ) : (
+                  <div className="text-slate-500 mt-0.5">প্রেরক নম্বর: {selectedReg.senderMobile || 'প্রযোজ্য নয়'}</div>
+                )}
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <span className="text-slate-500">সর্বমোট ফি:</span>
                 <div className="text-lg font-bold text-emerald-900 font-mono">{toBangla(selectedReg.totalFee)} টাকা</div>
               </div>
@@ -346,6 +379,38 @@ export default function RegistrationsManager() {
                   onChange={(e) => setEditReg({ ...editReg, presentAddress: e.target.value })}
                   className="input input-bordered input-sm w-full"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold block mb-1">পেমেন্ট মাধ্যম</label>
+                  <select
+                    value={editReg.paymentMethod || 'বিকাশ'}
+                    onChange={(e) => setEditReg({ ...editReg, paymentMethod: e.target.value })}
+                    className="select select-bordered select-sm w-full"
+                  >
+                    <option value="বিকাশ">বিকাশ</option>
+                    <option value="ব্যাংক">ব্যাংক</option>
+                    <option value="হাতে হাতে / ক্যাশ">হাতে হাতে / ক্যাশ</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">
+                    {(editReg.paymentMethod?.includes('হাতে') || editReg.paymentMethod?.includes('ক্যাশ')) ? 'ক্যাশ গ্রহণকারীর নাম' : 'TrxID'}
+                  </label>
+                  <input
+                    type="text"
+                    value={(editReg.paymentMethod?.includes('হাতে') || editReg.paymentMethod?.includes('ক্যাশ')) ? (editReg.cashReceiver || '') : (editReg.transactionId || '')}
+                    onChange={(e) => {
+                      if (editReg.paymentMethod?.includes('হাতে') || editReg.paymentMethod?.includes('ক্যাশ')) {
+                        setEditReg({ ...editReg, cashReceiver: e.target.value });
+                      } else {
+                        setEditReg({ ...editReg, transactionId: e.target.value });
+                      }
+                    }}
+                    placeholder={(editReg.paymentMethod?.includes('হাতে') || editReg.paymentMethod?.includes('ক্যাশ')) ? 'ক্যাশ গ্রহীতার নাম' : 'TrxID'}
+                    className="input input-bordered input-sm w-full"
+                  />
+                </div>
               </div>
               <div className="pt-2 flex justify-end space-x-2">
                 <button type="button" onClick={() => setEditReg(null)} className="btn btn-sm btn-ghost">বাতিল</button>
