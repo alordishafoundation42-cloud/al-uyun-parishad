@@ -51,12 +51,19 @@ exports.createRegistration = async (req, res) => {
       });
     }
 
-    // Check if hand cash payment
+    // Check payment method types
     const isCashPayment = Boolean(
       paymentMethod && (
         paymentMethod.includes('হাতে') ||
         paymentMethod.includes('ক্যাশ') ||
         paymentMethod.toLowerCase().includes('cash')
+      )
+    );
+
+    const isBankPayment = Boolean(
+      paymentMethod && (
+        paymentMethod.includes('ব্যাংক') ||
+        paymentMethod.toLowerCase().includes('bank')
       )
     );
 
@@ -67,11 +74,30 @@ exports.createRegistration = async (req, res) => {
           message: 'হাতে হাতে ক্যাশ ফি জমার ক্ষেত্রে কার কাছে টাকা জমা দিয়েছেন তাঁর নাম প্রদান করা আবশ্যক।'
         });
       }
-    } else {
-      if (!transactionId || !senderMobile) {
+    } else if (isBankPayment) {
+      // ব্যাংক জমা: ডিপোজিট স্লিপের ছবি বাধ্যতামূলক, প্রেরক মোবাইল বা TrxID বাধ্যতামূলক নয়
+      if (!receiptUrl || !receiptUrl.trim()) {
         return res.status(400).json({
           success: false,
-          message: 'পেমেন্টের ট্রানজ্যাকশন আইডি ও প্রেরক মোবাইল নম্বর প্রদান করুন।'
+          message: 'ব্যাংক একাউন্টে ফি জমার ক্ষেত্রে ব্যাংক ডিপোজিট স্লিপের ছবি আপলোড করা আবশ্যক।'
+        });
+      }
+    } else {
+      // বিকাশ: রসিদ/স্ক্রিনশট দিলে TrxID লাগবে না, অথবা TrxID দিতে পারে
+      const hasReceipt = Boolean(receiptUrl && receiptUrl.trim());
+      const hasTrx = Boolean(transactionId && transactionId.trim());
+
+      if (!hasReceipt && !hasTrx) {
+        return res.status(400).json({
+          success: false,
+          message: 'বিকাশ পেমেন্টের ট্রানজ্যাকশন আইডি (TrxID) প্রদান করুন অথবা পেমেন্ট রসিদ/স্ক্রিনশটের ছবি আপলোড করুন।'
+        });
+      }
+
+      if (!hasReceipt && (!senderMobile || !senderMobile.trim())) {
+        return res.status(400).json({
+          success: false,
+          message: 'বিকাশ প্রেরক মোবাইল নম্বর প্রদান করুন।'
         });
       }
     }

@@ -13,7 +13,9 @@ import {
   X,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
 import { downloadRegistrationsCSV } from '../utils/exportCsv';
@@ -306,6 +308,19 @@ export default function RegistrationsManager() {
                   </div>
                 ) : (
                   <div className="text-slate-500 mt-0.5">প্রেরক নম্বর: {selectedReg.senderMobile || 'প্রযোজ্য নয়'}</div>
+                )}
+                {selectedReg.receiptUrl && (
+                  <div className="mt-2.5">
+                    <a
+                      href={selectedReg.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      আপলোডকৃত রসিদ / স্লিপ দেখুন <ExternalLink className="w-3 h-3 ml-0.5" />
+                    </a>
+                  </div>
                 )}
               </div>
               <div className="text-left sm:text-right">

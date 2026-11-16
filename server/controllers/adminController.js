@@ -360,6 +360,7 @@ exports.exportRegistrationsCSV = async (req, res) => {
       'রেজিস্ট্রেশন অবস্থা',
       'পেমেন্ট যাচাইয়ের সময়',
       'এডমিন নোট',
+      'পেমেন্ট রসিদ / স্লিপ লিংক',
       'রেজিস্ট্রেশনের তারিখ ও সময়'
     ];
 
@@ -409,6 +410,7 @@ exports.exportRegistrationsCSV = async (req, res) => {
         safeVal(r.registrationStatus),
         safeVal(formatDate(r.paymentVerifiedAt)),
         safeVal(r.adminNote || ''),
+        safeVal(r.receiptUrl || ''),
         safeVal(formatDate(r.createdAt))
       ].join(',');
     });

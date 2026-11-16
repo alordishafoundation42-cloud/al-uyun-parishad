@@ -204,7 +204,18 @@ export default function PaymentsManager() {
                           {p.transactionId && <div className="text-[10px] text-slate-400">{p.transactionId}</div>}
                         </div>
                       ) : (
-                        p.transactionId || '—'
+                        <div>{p.transactionId || '—'}</div>
+                      )}
+                      {p.receiptUrl && (
+                        <a
+                          href={p.receiptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 underline font-sans font-bold"
+                          title="রসিদ স্লিপের ছবি দেখুন"
+                        >
+                          <FileText className="w-3 h-3 text-emerald-600" /> রসিদ স্লিপ
+                        </a>
                       )}
                     </td>
                     <td className="font-mono text-slate-600">{p.senderMobile}</td>

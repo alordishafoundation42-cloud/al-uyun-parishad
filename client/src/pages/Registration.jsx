@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { uploadToImgBB } from '../utils/imageUpload';
 import { 
   User, 
   Phone, 
@@ -14,10 +15,16 @@ import {
   CreditCard, 
   AlertCircle, 
   CheckCircle,
+  CheckCircle2,
   HelpCircle,
   ArrowRight,
   Building2,
-  Banknote
+  Banknote,
+  UploadCloud,
+  Image as ImageIcon,
+  ExternalLink,
+  Eye,
+  RefreshCw
 } from 'lucide-react';
 
 export default function Registration() {
@@ -85,6 +92,44 @@ export default function Registration() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  // Convert Bengali numerals to English numerals
+  const toEnglishDigits = (str) => {
+    if (!str && str !== 0) return '';
+    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(str).replace(/[০-৯]/g, (w) => banglaDigits.indexOf(w));
+  };
+
+  // Upload payment receipt / screenshot to ImgBB
+  const handleReceiptUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingReceipt(true);
+    setUploadError('');
+    try {
+      const url = await uploadToImgBB(file);
+      setFormData(prev => ({ ...prev, receiptUrl: url }));
+      if (errors.receiptUrl) {
+        setErrors(prev => ({ ...prev, receiptUrl: '' }));
+      }
+      if (errors.transactionId) {
+        setErrors(prev => ({ ...prev, transactionId: '' }));
+      }
+    } catch (err) {
+      setUploadError(err.message || 'ছবি আপলোড ব্যর্থ হয়েছে।');
+    } finally {
+      setUploadingReceipt(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveReceipt = () => {
+    setFormData(prev => ({ ...prev, receiptUrl: '' }));
+    setUploadError('');
+  };
 
   // Handle standard field changes
   const handleInputChange = (e) => {
@@ -119,11 +164,18 @@ export default function Registration() {
     setFamilyMembers((prev) => prev.filter((m) => m.id !== id));
   };
 
-  // Update a family member field
+  // Update a family member field (allows direct number typing, supports English & Bengali digits)
   const updateFamilyMember = (id, field, value) => {
+    let finalValue = value;
+    if (field === 'age') {
+      finalValue = toEnglishDigits(value).replace(/\D/g, '');
+    }
     setFamilyMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+      prev.map((m) => (m.id === id ? { ...m, [field]: finalValue } : m))
     );
+    if (errors[`family_${id}_${field}`]) {
+      setErrors((prev) => ({ ...prev, [`family_${id}_${field}`]: '' }));
+    }
   };
 
   // Participant counts & calculation
@@ -136,7 +188,7 @@ export default function Registration() {
   const freeChildrenCount = familyMembers.filter((m) => {
     const ageNum = Number(m.age);
     const isChild = ['ছেলে', 'মেয়ে', 'অন্যান্য'].includes(m.relationship) && m.relationship !== 'স্ত্রী';
-    return isChild && ageNum > 0 && ageNum <= 3;
+    return isChild && ageNum >= 0 && ageNum <= 3;
   }).length;
 
   const payingParticipants = Math.max(1, totalParticipants - freeChildrenCount);
@@ -149,12 +201,19 @@ export default function Registration() {
     return String(num).replace(/[0-9]/g, (w) => digits[+w]);
   };
 
-  // Check if Hand Cash payment
+  // Check payment method types
   const isCash = Boolean(
     formData.paymentMethod && (
       formData.paymentMethod.includes('হাতে') ||
       formData.paymentMethod.includes('ক্যাশ') ||
       formData.paymentMethod.toLowerCase().includes('cash')
+    )
+  );
+
+  const isBank = Boolean(
+    formData.paymentMethod && (
+      formData.paymentMethod.includes('ব্যাংক') ||
+      formData.paymentMethod.toLowerCase().includes('bank')
     )
   );
 
@@ -185,31 +244,36 @@ export default function Registration() {
     if (!formData.permanentAddress.trim()) newErrors.permanentAddress = 'স্থায়ী/গ্রামের ঠিকানা লিখুন';
 
     // Payment validation
-    const isCash = Boolean(
-      formData.paymentMethod && (
-        formData.paymentMethod.includes('হাতে') ||
-        formData.paymentMethod.includes('ক্যাশ') ||
-        formData.paymentMethod.toLowerCase().includes('cash')
-      )
-    );
-
     if (isCash) {
       if (!formData.cashReceiver.trim()) {
         newErrors.cashReceiver = 'কার কাছে নগদ টাকা জমা দিয়েছেন তাঁর নাম ও পরিচয় উল্লেখ করুন';
       }
+    } else if (isBank) {
+      // ব্যাংক জমা: ডিপোজিট স্লিপের ছবি আবশ্যক
+      if (!formData.receiptUrl) {
+        newErrors.receiptUrl = 'ব্যাংক ডিপোজিট স্লিপের ছবি আপলোড করা আবশ্যক';
+      }
     } else {
-      if (!formData.transactionId.trim()) newErrors.transactionId = 'ট্রানজ্যাকশন আইডি বা ব্যাংক রেফারেন্স দিন';
-      if (!formData.senderMobile.trim()) newErrors.senderMobile = 'যে নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন';
+      // বিকাশ: রসিদ/স্ক্রিনশট দিলে TrxID লাগবে না, অথবা TrxID দিতে পারে
+      const hasReceipt = Boolean(formData.receiptUrl);
+      const hasTrx = Boolean(formData.transactionId && formData.transactionId.trim());
+
+      if (!hasReceipt && !hasTrx) {
+        newErrors.transactionId = 'বিকাশ TrxID দিন অথবা পেমেন্টের রসিদ/স্ক্রিনশটের ছবি আপলোড করুন';
+      }
+      if (!hasReceipt && !formData.senderMobile.trim()) {
+        newErrors.senderMobile = 'যে নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন';
+      }
     }
     if (!formData.paymentDate) newErrors.paymentDate = 'পেমেন্টের তারিখ নির্বাচন করুন';
 
-    // Family members validation
+    // Family members validation (বয়স সংখ্যায় টাইপ আবশ্যক)
     familyMembers.forEach((member, idx) => {
       if (!member.name.trim()) {
         newErrors[`family_${member.id}_name`] = `সদস্য #${idx + 1}-এর নাম লিখুন`;
       }
-      if (!member.age || member.age <= 0) {
-        newErrors[`family_${member.id}_age`] = `সদস্য #${idx + 1}-এর সঠিক বয়স লিখুন`;
+      if (member.age === '' || member.age === undefined || isNaN(Number(member.age)) || Number(member.age) < 0) {
+        newErrors[`family_${member.id}_age`] = `সদস্য #${idx + 1}-এর সঠিক বয়স সংখ্যায় টাইপ করুন`;
       }
     });
 
@@ -538,15 +602,15 @@ export default function Registration() {
 
                       {/* Age */}
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-700">বয়স (বছর) *</label>
+                        <label className="text-xs font-semibold text-slate-700">বয়স (সংখ্যায় টাইপ করুন) *</label>
                         <input
-                          type="number"
-                          min="1"
-                          max="120"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={member.age}
                           onChange={(e) => updateFamilyMember(member.id, 'age', e.target.value)}
-                          placeholder="বয়স"
-                          className="input input-bordered input-sm w-full bg-white"
+                          placeholder="বয়স (যেমন: ৫)"
+                          className={`input input-bordered input-sm w-full bg-white font-mono ${errors[`family_${member.id}_age`] ? 'input-error' : ''}`}
                         />
                         {errors[`family_${member.id}_age`] && (
                           <p className="text-[11px] text-red-500">{errors[`family_${member.id}_age`]}</p>
@@ -783,7 +847,7 @@ export default function Registration() {
                 </div>
               </div>
 
-              {/* Conditional Fields based on isCash */}
+              {/* Conditional Fields based on Payment Method */}
               {isCash ? (
                 <>
                   {/* Cash Receiver Name */}
@@ -824,7 +888,7 @@ export default function Registration() {
                   {/* Cash Receipt / Reference (Optional) */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-800">
-                      রশিদ নম্বর / নোট (যদি থাকে)
+                      রশিদ নম্বর / মন্তব্য (যদি থাকে)
                     </label>
                     <input
                       type="text"
@@ -836,19 +900,50 @@ export default function Registration() {
                     />
                   </div>
                 </>
-              ) : (
+              ) : isBank ? (
                 <>
-                  {/* Transaction ID */}
+                  {/* Bank Deposit Fields: No TrxID or sender mobile required, Slip image is required! */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">ব্যাংকে টাকা জমাদানের তারিখ *</label>
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      value={formData.paymentDate}
+                      onChange={handleInputChange}
+                      className={`input input-bordered w-full bg-slate-50 focus:bg-white ${errors.paymentDate ? 'input-error' : ''}`}
+                    />
+                    {errors.paymentDate && <p className="text-xs text-red-500 mt-1">{errors.paymentDate}</p>}
+                  </div>
+
+                  {/* Slip No / Reference (Optional) */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-800">
-                      ট্রানজ্যাকশন আইডি (TrxID) / ব্যাংক রেফারেন্স *
+                      ডিপোজিট স্লিপ নম্বর / রেফারেন্স (ঐচ্ছিক)
                     </label>
                     <input
                       type="text"
                       name="transactionId"
                       value={formData.transactionId}
                       onChange={handleInputChange}
-                      placeholder="যেমন: BL9X7K290 অথবা ডিপোজিট স্লিপ নং"
+                      placeholder="ব্যাংক স্লিপ নং বা রেফারেন্স (যদি থাকে)"
+                      className="input input-bordered w-full bg-slate-50 focus:bg-white font-mono"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* bKash Fields */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">
+                      বিকাশ ট্রানজ্যাকশন আইডি (TrxID)
+                      {formData.receiptUrl ? ' (ঐচ্ছিক - ছবি দেওয়া হয়েছে)' : ' *'}
+                    </label>
+                    <input
+                      type="text"
+                      name="transactionId"
+                      value={formData.transactionId}
+                      onChange={handleInputChange}
+                      placeholder="যেমন: BL9X7K290 (স্ক্রিনশট আপলোড করলে TrxID ঐচ্ছিক)"
                       className={`input input-bordered w-full bg-slate-50 focus:bg-white font-mono ${errors.transactionId ? 'input-error' : ''}`}
                     />
                     {errors.transactionId && <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>}
@@ -857,7 +952,8 @@ export default function Registration() {
                   {/* Sender Mobile */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-800">
-                      প্রেরক মোবাইল নম্বর (যে নম্বর থেকে পাঠিয়েছেন) *
+                      প্রেরক বিকাশ নম্বর
+                      {formData.receiptUrl ? ' (ঐচ্ছিক)' : ' *'}
                     </label>
                     <input
                       type="text"
@@ -871,8 +967,8 @@ export default function Registration() {
                   </div>
 
                   {/* Payment Date */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-800">পেমেন্টের তারিখ *</label>
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-800">বিকাশ পেমেন্টের তারিখ *</label>
                     <input
                       type="date"
                       name="paymentDate"
@@ -885,19 +981,100 @@ export default function Registration() {
                 </>
               )}
 
-              {/* Optional Receipt note */}
-              <div className="sm:col-span-2 space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800">
-                  পেমেন্ট রসিদ / স্ক্রিনশট লিংক (ঐচ্ছিক)
-                </label>
-                <input
-                  type="text"
-                  name="receiptUrl"
-                  value={formData.receiptUrl}
-                  onChange={handleInputChange}
-                  placeholder="রসিদের ইমেজ ড্রাইভ বা ক্লাউড লিংক (প্রযোজ্য হলে)"
-                  className="input input-bordered w-full bg-slate-50 focus:bg-white"
-                />
+              {/* Receipt / Screenshot Image Upload with ImgBB */}
+              <div className="sm:col-span-2 space-y-2 p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-emerald-700" />
+                    {isBank 
+                      ? 'ব্যাংক ডিপোজিট স্লিপের ছবি আপলোড করুন *' 
+                      : 'পেমেন্ট রসিদ / স্ক্রিনশটের ছবি আপলোড (ঐচ্ছিক)'}
+                  </label>
+                  {isBank ? (
+                    <span className="badge badge-sm badge-error text-white font-bold">বাধ্যতামূলক</span>
+                  ) : (
+                    <span className="badge badge-sm badge-ghost text-slate-600 font-semibold">ছবি দিলে TrxID লাগবে না</span>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-500">
+                  {isBank 
+                    ? 'ব্যাংক থেকে প্রাপ্ত সিলযুক্ত ডিপোজিট স্লিপের স্পষ্ট ছবি তুলে এখানে আপলোড করুন।'
+                    : 'বিকাশ অ্যাপের পেমেন্ট সম্পন্ন হওয়ার স্ক্রিনশট বা রসিদের ছবি আপলোড করতে পারেন। ছবি দিলে TrxID টাইপ করার প্রয়োজন নেই।'}
+                </p>
+
+                {formData.receiptUrl ? (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-300">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={formData.receiptUrl}
+                        alt="Payment Receipt"
+                        className="w-16 h-16 object-cover rounded-lg border border-emerald-400 shadow-sm"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1 text-xs font-bold text-emerald-800">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" /> রসিদের ছবি সফলভাবে আপলোড হয়েছে
+                        </div>
+                        <a
+                          href={formData.receiptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-emerald-700 underline flex items-center gap-0.5 mt-0.5 hover:text-emerald-900"
+                        >
+                          ছবিটি সম্পূর্ণ আকারে দেখুন <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveReceipt}
+                      className="btn btn-xs btn-outline border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" /> রসিদ মুছুন
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={`border-2 border-dashed ${errors.receiptUrl ? 'border-red-400 bg-red-50/20' : 'border-slate-300'} hover:border-emerald-600 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer bg-white transition-all hover:bg-emerald-50/30 group`}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleReceiptUpload}
+                        disabled={uploadingReceipt}
+                        className="hidden"
+                      />
+                      {uploadingReceipt ? (
+                        <div className="flex flex-col items-center gap-2 py-2">
+                          <span className="loading loading-spinner text-emerald-800"></span>
+                          <span className="text-xs font-semibold text-emerald-800">ImgBB-তে ছবি আপলোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-center">
+                          <div className="p-3 bg-emerald-50 text-emerald-800 rounded-full group-hover:scale-110 transition-transform">
+                            <UploadCloud className="w-6 h-6" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-700 mt-1">
+                            রসিদ বা স্লিপের ছবি আপলোড করতে এখানে ক্লিক করুন
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            ছবি ফরম্যাট: JPG, PNG, JPEG, WEBP (সর্বোচ্চ ১০ মেগাবাইট)
+                          </span>
+                        </div>
+                      )}
+                    </label>
+
+                    {uploadError && (
+                      <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {uploadError}
+                      </p>
+                    )}
+                    {errors.receiptUrl && (
+                      <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {errors.receiptUrl}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
             </div>
