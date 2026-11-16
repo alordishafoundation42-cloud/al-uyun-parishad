@@ -44,35 +44,9 @@ export default function RegistrationsManager() {
         setRegistrations(res.data.data.registrations);
         setTotalPages(res.data.data.pages || 1);
       }
-    } catch {
-      // Mock data for preview if database empty
-      setRegistrations([
-        {
-          _id: 'reg_1',
-          registrationNumber: 'AUP-2026-1001',
-          friendName: 'মোহাম্মদ আব্দুল্লাহ',
-          mobile: '01819173608',
-          email: 'abdullah@example.com',
-          profession: 'ব্যবসায়ী',
-          highestDegree: 'কামিল',
-          kamilSubject: 'হাদিস',
-          presentAddress: 'জিইসি মোড়, চট্টগ্রাম',
-          permanentAddress: 'পটিয়া, চট্টগ্রাম',
-          familyMembers: [
-            { name: 'ফাতিমা বেগম', age: 32, gender: 'মহিলা', relationship: 'স্ত্রী' },
-            { name: 'আব্দুর রহমান', age: 9, gender: 'পুরুষ', relationship: 'ছেলে' },
-            { name: 'মরিয়ম আক্তার', age: 6, gender: 'মহিলা', relationship: 'মেয়ে' }
-          ],
-          participantCount: 4,
-          totalFee: 4000,
-          paymentMethod: 'বিকাশ',
-          transactionId: 'TRX9827361',
-          paymentStatus: 'Verified',
-          registrationStatus: 'নিশ্চিত',
-          confirmationEmailStatus: 'Sent',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+    } catch (err) {
+      setRegistrations([]);
+      setMessage('সার্ভার বা ডাটাবেজের সাথে সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে ব্যাকএন্ড সার্ভার চালু আছে কিনা নিশ্চিত করুন।');
     } finally {
       setLoading(false);
     }

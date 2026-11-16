@@ -38,26 +38,8 @@ export default function PaymentsManager() {
       if (res.data.success) {
         setRegistrations(res.data.data.registrations);
       }
-    } catch {
-      // Mock for dev
-      setRegistrations([
-        {
-          _id: 'p_1',
-          registrationNumber: 'AUP-2026-1002',
-          friendName: 'কাজী সাইফুল ইসলাম',
-          mobile: '01819123456',
-          email: 'saiful@example.com',
-          participantCount: 3,
-          totalFee: 3000,
-          paymentMethod: 'বিকাশ',
-          transactionId: 'BK9X87A21',
-          paymentDate: '2026-11-12',
-          senderMobile: '01819123456',
-          paymentStatus: 'Pending',
-          registrationStatus: 'অপেক্ষমাণ',
-          confirmationEmailStatus: 'Not Sent'
-        }
-      ]);
+    } catch (err) {
+      setRegistrations([]);
     } finally {
       setLoading(false);
     }

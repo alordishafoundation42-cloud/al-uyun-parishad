@@ -232,29 +232,21 @@ export default function Registration() {
         receiptUrl: formData.receiptUrl || null,
       };
 
-      // Call API or use placeholder generator for UI testing
-      let registrationNumber = 'AUP-2026-' + Math.floor(1000 + Math.random() * 9000);
+      // Submit to backend API
+      let registrationNumber = '';
       try {
-        const response = await fetch('/api/registrations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (response.ok && data.data?.registrationNumber) {
-          registrationNumber = data.data.registrationNumber;
-        } else if (response.status === 409) {
-          throw new Error('এই মোবাইল নম্বর দিয়ে ইতিমধ্যে রেজিস্ট্রেশন করা হয়েছে। সংশোধনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।');
+        const res = await api.post('/registrations', payload);
+        if (res.data?.success && res.data?.data?.registrationNumber) {
+          registrationNumber = res.data.data.registrationNumber;
+        } else {
+          throw new Error(res.data?.message || 'সার্ভার থেকে রেজিস্ট্রেশন নিশ্চিতকরণ পাওয়া যায়নি।');
         }
       } catch (apiErr) {
-        if (apiErr.message.includes('ইতিমধ্যে রেজিস্ট্রেশন')) {
-          throw apiErr;
-        }
-        // Fallback for phase 3 offline UI test
-        console.warn('Backend not connected yet in Phase 3, saving to session:', apiErr);
+        const errorMsg = apiErr.response?.data?.message || apiErr.message || 'সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।';
+        throw new Error(errorMsg);
       }
 
-      // Navigate to success page with registration details
+      // Navigate to success page ONLY on genuine server confirmation
       navigate('/registration-success', {
         state: {
           registrationNumber,

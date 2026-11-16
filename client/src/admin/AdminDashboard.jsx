@@ -39,15 +39,14 @@ export default function AdminDashboard() {
           setStats(res.data.data);
         }
       } catch (err) {
-        // Fallback demo data if testing before first registration
         setStats({
-          totalRegistrations: 12,
-          totalParticipants: 42,
-          totalExpectedFee: 42000,
-          totalVerifiedPayments: 36000,
-          pendingPaymentsCount: 2,
-          totalQuizParticipants: 8,
-          completedQuizCount: 8,
+          totalRegistrations: 0,
+          totalParticipants: 0,
+          totalExpectedFee: 0,
+          totalVerifiedPayments: 0,
+          pendingPaymentsCount: 0,
+          totalQuizParticipants: 0,
+          completedQuizCount: 0,
         });
       } finally {
         setLoading(false);
