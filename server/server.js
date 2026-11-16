@@ -46,8 +46,17 @@ const publicLimiter = rateLimit({
   }
 });
 
+// Fix Vercel rewrites: if Vercel sets req.url to /server.js, restore from x-matched-path
+app.use((req, res, next) => {
+  const matched = req.headers['x-matched-path'];
+  if (matched && (req.url === '/server.js' || req.url === '/server' || req.url.startsWith('/server.js'))) {
+    req.url = matched;
+  }
+  next();
+});
+
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'আল উয়ূন পরিষদ ২০২৬ সার্ভার সচল রয়েছে',
@@ -58,6 +67,10 @@ app.get('/api/health', (req, res) => {
 // Mount Routes
 app.use('/api', publicLimiter, publicRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Fallback direct mounts
+app.use('/admin', adminRoutes);
+app.use('/', publicRoutes);
 
 // Fallback 404
 app.use((req, res) => {
