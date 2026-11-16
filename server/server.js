@@ -81,7 +81,7 @@ app.use((req, res) => {
       url: req.url,
       originalUrl: req.originalUrl,
       path: req.path,
-      matchedPath: req.headers['x-matched-path']
+      headers: req.headers
     }
   });
 });
