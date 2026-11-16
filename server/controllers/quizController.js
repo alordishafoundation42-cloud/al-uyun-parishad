@@ -28,7 +28,7 @@ exports.verifyChild = async (req, res) => {
     if (!mobile || !childName) {
       return res.status(400).json({
         success: false,
-        message: 'বাবার মোবাইল নম্বর ও শিশুর নাম প্রদান আবশ্যক।'
+        message: 'বাবার মোবাইল নম্বর ও সন্তানের নাম প্রদান আবশ্যক।'
       });
     }
 
@@ -54,7 +54,7 @@ exports.verifyChild = async (req, res) => {
     const matchingChild = reg.familyMembers.find(m => {
       const isNameMatch = m.name.toLowerCase().includes(cleanChildName.toLowerCase()) || 
                           cleanChildName.toLowerCase().includes(m.name.toLowerCase());
-      const isChildRelation = ['ছেলে', 'মেয়ে'].includes(m.relationship);
+      const isChildRelation = ['ছেলে', 'মেয়ে', 'সন্তান'].includes(m.relationship);
       return isNameMatch && isChildRelation;
     });
 
@@ -181,49 +181,82 @@ exports.startQuiz = async (req, res) => {
 
     const questionsList = [];
 
-    // Category 1: Father Questions (without revealing answer)
+    // Category 1: বাবার নিবন্ধিত তথ্যভিত্তিক প্রশ্ন — ৪টি (reg থেকে dynamic)
     if (reg) {
+      // প্রশ্ন ১: বাবার নাম
+      const namePool = [
+        reg.friendName,
+        'মাওলানা আব্দুর রহমান',
+        'কাজী সাইফুল ইসলাম',
+        'মুহাম্মদ ইব্রাহিম হোসেন',
+        'মাওলানা রফিকুল হক'
+      ].filter((v, i, a) => a.indexOf(v) === i);
+      const nameOptions = [
+        ...namePool.filter(n => n !== reg.friendName).sort(() => 0.5 - Math.random()).slice(0, 3),
+        reg.friendName
+      ].sort(() => 0.5 - Math.random());
+
       questionsList.push({
-        id: 'father_prof',
-        question: 'আপনার বাবার পেশা কী?',
-        options: getDistractors('profession', reg.profession),
+        id: 'father_name',
+        question: 'তোমার বাবার নিবন্ধিত পূর্ণ নাম কোনটি?',
+        options: nameOptions,
         marks: 1
       });
 
-      questionsList.push({
-        id: 'father_degree',
-        question: 'আপনার বাবার সর্বোচ্চ শিক্ষাগত যোগ্যতা কী?',
-        options: getDistractors('degree', reg.highestDegree),
-        marks: 1
-      });
-
-      if (reg.highestDegree === 'কামিল' && reg.kamilSubject) {
+      // প্রশ্ন ২: বাবার পেশা
+      if (reg.profession) {
         questionsList.push({
-          id: 'father_kamil',
-          question: 'আপনার বাবা কামিল কোন বিষয়ে সম্পন্ন করেছেন?',
-          options: getDistractors('kamilSubject', reg.kamilSubject),
+          id: 'father_prof',
+          question: 'তোমার বাবার পেশা কী?',
+          options: getDistractors('profession', reg.profession),
           marks: 1
         });
       }
 
-      const nameDistractors = [
-        reg.friendName,
-        'মুহাম্মদ আব্দুল্লাহ',
-        'কাজী সাইফুল ইসলাম',
-        'মাওলানা রফিকুল ইসলাম'
-      ].filter((v, i, a) => a.indexOf(v) === i).sort(() => 0.5 - Math.random());
+      // প্রশ্ন ৩: বাবার শিক্ষাগত যোগ্যতা
+      if (reg.highestDegree) {
+        questionsList.push({
+          id: 'father_degree',
+          question: 'তোমার বাবার সর্বোচ্চ শিক্ষাগত যোগ্যতা কোনটি?',
+          options: getDistractors('degree', reg.highestDegree),
+          marks: 1
+        });
+      }
 
-      questionsList.push({
-        id: 'father_name',
-        question: 'আপনার বাবার নিবন্ধিত পূর্ণ নাম কী?',
-        options: nameDistractors,
-        marks: 1
-      });
+      // প্রশ্ন ৪: কামিল বিষয় (যদি থাকে) অথবা জেলা
+      if (reg.highestDegree === 'কামিল' && reg.kamilSubject) {
+        questionsList.push({
+          id: 'father_kamil',
+          question: 'তোমার বাবা কামিল কোন বিষয়ে সম্পন্ন করেছেন?',
+          options: getDistractors('kamilSubject', reg.kamilSubject),
+          marks: 1
+        });
+      } else if (reg.permanentDistrict || reg.presentDistrict) {
+        const district = reg.permanentDistrict || reg.presentDistrict;
+        questionsList.push({
+          id: 'father_district',
+          question: 'তোমার বাবার স্থায়ী ঠিকানার জেলা কোনটি?',
+          options: getDistractors('district', district),
+          marks: 1
+        });
+      }
     }
 
-    // Category 2: Islamic Questions
-    const islamicQuestions = store.questions.filter(q => q.isActive);
-    islamicQuestions.forEach((q, idx) => {
+    // Category 2: ইসলামিক প্রশ্ন — store থেকে সব active প্রশ্ন লোড, shuffle করে নাও
+    let islamicQs = [];
+    if (getDBStatus()) {
+      try {
+        islamicQs = await QuizQuestion.find({ isActive: true }).lean();
+      } catch {}
+    }
+    if (islamicQs.length === 0) {
+      islamicQs = store.questions.filter(q => q.isActive);
+    }
+
+    // ১৬টি ইসলামিক প্রশ্ন নাও (shuffle করে)
+    const shuffledIslamic = islamicQs.sort(() => 0.5 - Math.random());
+    const islamicNeeded = Math.max(16, 20 - questionsList.length);
+    shuffledIslamic.slice(0, islamicNeeded).forEach((q, idx) => {
       questionsList.push({
         id: 'iq_' + (q._id || idx),
         question: q.question,
@@ -231,6 +264,9 @@ exports.startQuiz = async (req, res) => {
         marks: q.marks || 1
       });
     });
+
+    // মোট ২০টি নিশ্চিত করো (বেশি হলে কাটো)
+    const finalQuestions = questionsList.slice(0, 20);
 
     const remainingSeconds = Math.max(0, Math.floor((new Date(attempt.expiresAt).getTime() - Date.now()) / 1000));
 
@@ -241,7 +277,7 @@ exports.startQuiz = async (req, res) => {
         childName,
         expiresAt: attempt.expiresAt,
         remainingSeconds,
-        questions: questionsList
+        questions: finalQuestions
       }
     });
 
@@ -305,9 +341,18 @@ exports.submitQuiz = async (req, res) => {
       correctMap['father_degree'] = reg.highestDegree;
       correctMap['father_kamil'] = reg.kamilSubject;
       correctMap['father_name'] = reg.friendName;
+      correctMap['father_district'] = reg.permanentDistrict || reg.presentDistrict;
     }
 
-    store.questions.forEach(q => {
+    // ইসলামিক প্রশ্নের সঠিক উত্তর map — DB থেকে লোড করার চেষ্টা
+    let allQuestions = store.questions;
+    if (getDBStatus()) {
+      try {
+        const dbQs = await QuizQuestion.find({ isActive: true }).lean();
+        if (dbQs.length > 0) allQuestions = dbQs;
+      } catch {}
+    }
+    allQuestions.forEach(q => {
       correctMap['iq_' + q._id] = q.correctAnswer;
     });
 
