@@ -96,7 +96,7 @@ export default function RegistrationSuccess() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link
-              to="/registration-status"
+              to={`/registration-status?reg=${encodeURIComponent(registrationNumber)}`}
               className="btn btn-outline border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white w-full sm:w-auto"
             >
               <Search className="w-4 h-4 mr-1.5" /> স্ট্যাটাস দেখুন

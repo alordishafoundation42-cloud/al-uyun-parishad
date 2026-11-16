@@ -210,24 +210,88 @@ exports.createRegistration = async (req, res) => {
   }
 };
 
-// 2. Public Registration Status Lookup (Strictly Privacy Compliant)
+// 2. Public Registration Status Lookup (Strictly Privacy Compliant & Flexible Search)
 exports.getRegistrationStatus = async (req, res) => {
   try {
-    const regNo = req.params.registrationNumber.trim().toUpperCase();
+    const rawParam = String(req.params.registrationNumber || '').trim();
+    if (!rawParam) {
+      return res.status(400).json({
+        success: false,
+        message: 'রেজিস্ট্রেশন নম্বর বা মোবাইল নম্বর প্রদান করুন।'
+      });
+    }
 
-    let reg = store.registrations.find(r => r.registrationNumber === regNo);
+    // 1. Convert Bengali digits to English digits
+    const banglaToEnglishMap = { '০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9' };
+    const convertedInput = rawParam.replace(/[০-৯]/g, d => banglaToEnglishMap[d]).trim();
+    const upperInput = convertedInput.toUpperCase();
+    const digitsOnly = convertedInput.replace(/\D/g, '');
+
+    // Possible search variants
+    const searchVariants = [upperInput];
+
+    // If format like AUP20261001 without hyphens -> convert to AUP-2026-1001
+    const aupMatch = upperInput.match(/^AUP[ -]?2026[ -]?(\d{4})$/);
+    if (aupMatch) {
+      searchVariants.push(`AUP-2026-${aupMatch[1]}`);
+    }
+
+    // If user entered only serial number (e.g. 1001)
+    if (/^\d{4}$/.test(convertedInput)) {
+      searchVariants.push(`AUP-2026-${convertedInput}`);
+    }
+
+    const isMobileQuery = digitsOnly.length >= 10 && digitsOnly.length <= 11;
+
+    let reg = null;
+
+    // First try store
+    reg = store.registrations.find(r => {
+      const matchReg = r.registrationNumber && searchVariants.includes(r.registrationNumber.toUpperCase());
+      const matchMobile = isMobileQuery && r.mobile && r.mobile.replace(/\D/g, '').endsWith(digitsOnly.slice(-10));
+      return matchReg || matchMobile;
+    });
+
+    // If not in store, query MongoDB
     if (!reg && getDBStatus()) {
       try {
-        reg = await Registration.findOne({ registrationNumber: regNo });
-      } catch {}
+        const queryConditions = [];
+
+        // Exact match or regex on searchVariants
+        searchVariants.forEach(variant => {
+          queryConditions.push({ registrationNumber: new RegExp('^' + variant.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i') });
+        });
+
+        // Search by mobile if 10-11 digits
+        if (isMobileQuery) {
+          queryConditions.push({ mobile: new RegExp(digitsOnly.slice(-10) + '$') });
+        }
+
+        reg = await Registration.findOne({ $or: queryConditions }).lean();
+      } catch (dbErr) {
+        console.error('Registration status query error:', dbErr.message);
+      }
     }
 
     if (!reg) {
       return res.status(404).json({
         success: false,
-        message: 'প্রদত্ত রেজিস্ট্রেশন নম্বরটি পাওয়া যায়নি।'
+        message: 'প্রদত্ত তথ্য অনুযায়ী কোনো রেজিস্ট্রেশন রেকর্ড পাওয়া যায়নি। অনুগ্রহ করে রেজিস্ট্রেশন নম্বর বা মোবাইল নম্বর সঠিকভাবে পরীক্ষা করুন।'
       });
     }
+
+    // Mask mobile for privacy (e.g. 01819***608)
+    const rawMobile = String(reg.mobile || '');
+    const cleanMob = rawMobile.replace(/\D/g, '');
+    const maskedMobile = cleanMob.length >= 7 
+      ? `${cleanMob.slice(0, 5)}***${cleanMob.slice(-3)}`
+      : '***';
+
+    // Mask Transaction ID if exists
+    const rawTrx = String(reg.transactionId || '');
+    const maskedTrx = rawTrx && rawTrx !== 'N/A' && !rawTrx.startsWith('CASH-')
+      ? (rawTrx.length > 4 ? `***${rawTrx.slice(-4)}` : rawTrx)
+      : null;
 
     // Strictly return only privacy-safe fields:
     return res.status(200).json({
@@ -235,10 +299,23 @@ exports.getRegistrationStatus = async (req, res) => {
       data: {
         registrationNumber: reg.registrationNumber,
         friendName: reg.friendName,
+        maskedMobile,
         participantCount: reg.participantCount,
         totalFee: reg.totalFee,
-        paymentStatus: reg.paymentStatus,
-        registrationStatus: reg.registrationStatus
+        paymentStatus: reg.paymentStatus, // 'Pending' | 'Verified' | 'Rejected'
+        registrationStatus: reg.registrationStatus, // 'অপেক্ষমাণ' | 'নিশ্চিত' | 'বাতিল'
+        paymentMethod: reg.paymentMethod || 'ক্যাশ/ব্যাংক/বিকাশ',
+        paymentDate: reg.paymentDate || null,
+        cashReceiver: reg.cashReceiver || null,
+        maskedTransactionId: maskedTrx,
+        hasReceipt: Boolean(reg.receiptUrl),
+        receiptUrl: reg.receiptUrl || null,
+        familyMembersCount: Array.isArray(reg.familyMembers) ? reg.familyMembers.length : 0,
+        familyMembersList: Array.isArray(reg.familyMembers) ? reg.familyMembers.map(m => ({
+          name: m.name,
+          relationship: m.relationship
+        })) : [],
+        createdAt: reg.createdAt
       }
     });
 
