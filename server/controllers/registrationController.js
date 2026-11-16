@@ -118,7 +118,7 @@ exports.createRegistration = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // Save to MongoDB if connected
+    // Save to MongoDB
     let savedDoc = null;
     if (getDBStatus()) {
       try {
@@ -126,7 +126,16 @@ exports.createRegistration = async (req, res) => {
         savedDoc = await reg.save();
       } catch (err) {
         console.error('MongoDB registration save error:', err.message);
+        return res.status(500).json({
+          success: false,
+          message: 'ডাটাবেজে তথ্য সংরক্ষণে ত্রুটি: ' + err.message
+        });
       }
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'ডাটাবেজের সাথে সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+      });
     }
 
     registrationData._id = savedDoc ? savedDoc._id.toString() : 'reg_' + Date.now();

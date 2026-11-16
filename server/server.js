@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const { connectDB } = require('./config/db');
+const { connectDB, getDBStatus } = require('./config/db');
 
 const publicRoutes = require('./routes/publicRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -46,11 +46,22 @@ const publicLimiter = rateLimit({
   }
 });
 
+// Ensure MongoDB connection before handling requests (crucial for serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (e) {
+    console.error('DB connect middleware error:', e.message);
+  }
+  next();
+});
+
 // Health check
 app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'আল উয়ূন পরিষদ ২০২৬ সার্ভার সচল রয়েছে',
+    dbConnected: getDBStatus(),
     timestamp: new Date().toISOString()
   });
 });
