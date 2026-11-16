@@ -66,9 +66,9 @@ app.get(['/', '/health', '/api', '/api/health'], (req, res) => {
   });
 });
 
-// Mount Routes on /api
-app.use('/api', publicLimiter, publicRoutes);
+// Mount Routes on /api (more specific /api/admin must be mounted first)
 app.use('/api/admin', adminRoutes);
+app.use('/api', publicLimiter, publicRoutes);
 
 // Fallback direct mounts
 app.use('/admin', adminRoutes);
